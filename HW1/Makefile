@@ -38,6 +38,7 @@ all : $(addprefix $(BIN), $(CLASS_FILES))
 
 # Action starts with <TAB>
 $(BIN)%.class : $(SRC)%.java
+	@ mkdir -p $(BIN)
 	$(COMPILE) $<
 
 clean :
