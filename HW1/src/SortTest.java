@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Random;
 
 public class SortTest {
   public static void main (String[] args) {
@@ -13,6 +14,9 @@ public class SortTest {
 
     int[] A4 = {13, 59, 24, 18, 33, 20, 11, 11, 13, 50, 10999, 97, 1, 3, 5, 7, 9, 69};
     verifyParallelSort(A4);
+    
+    int[] A5 = genRandArr();
+    verifyParallelSort(A5);
   }
 
   static void verifyParallelSort(int[] A) {
@@ -42,6 +46,15 @@ public class SortTest {
       System.out.println("Great, your sorting algorithm works for this test case");
     }
     System.out.println("=========================================================");
+  }
+
+  public static int[] genRandArr() {
+    int[] a = new int[30];
+    Random r = new Random();
+    for (int i = 0; i < a.length; i++) {
+      a[i] = r.nextInt(100);
+    }
+    return a;
   }
 
   public static void printArray(int[] A) {
