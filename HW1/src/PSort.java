@@ -4,7 +4,7 @@
 import java.util.*;
 import java.util.concurrent.*;
 
-public class PSort extends RecursiveTask<Integer>{
+public class PSort extends RecursiveAction{
 	private int[] array;
 	private int begin;
 	private int end;
@@ -16,14 +16,12 @@ public class PSort extends RecursiveTask<Integer>{
 	}
 	
 	@Override
-	protected Integer compute() {
+	protected void compute() {
 		if(end - begin < 16) {
 			insertSort(array, begin, end);
-			return 0;
 		}
 		else {
 			quickSort(array, begin, end);
-			return 1;
 		}
 	}
 	
