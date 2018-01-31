@@ -34,9 +34,13 @@ public class PSort extends RecursiveTask<Integer>{
 		
 		int pivot = array[(end - begin) / 2];
 		int index = partition(array, begin, end-1, pivot);
-		quickSort(array, begin, index - 1);
-		quickSort(array, index, end);
-		
+
+    PSort left = new PSort(array, begin, index - 1);
+    PSort right = new PSort(array, index, end);
+
+    left.fork();
+    right.compute();
+    left.join();
 	}
 	
 	private int partition(int[] array, int begin, int end, int pivot) {
@@ -79,19 +83,20 @@ public class PSort extends RecursiveTask<Integer>{
 
 	private static ForkJoinPool pool = new ForkJoinPool();
 	
+	private static boolean edgeCase(int[] arr, int begin, int end) { 
+		if(arr.length == 0 || begin >= end)
+			return true;
+		return false;
+	}
+
 	public static void parallelSort(int[] A, int begin, int end){
 		if(edgeCase(A, begin, end))
 			return;
-		
+
 		pool.invoke(new PSort(A, begin, end));
 		
 	}
 	
 	
 	
-	private static boolean edgeCase(int[] arr, int begin, int end) { 
-		if(arr.length == 0 || begin >= end)
-			return true;
-		return false;
-	}
 }
