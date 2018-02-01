@@ -45,11 +45,12 @@ public class PSort {
      */
     @Override
     protected void compute() {
-      if(end - begin < 16) {
+      if(end - begin < 16 && end-begin >0) {
+        System.out.println("Elements: " + Integer.toString(end - begin));
         insertSort(array, begin, end);
-      } else {
+      } else if(end-begin > 0) {
         quickSort(array, begin, end);
-      }
+      } else {}
     }
 
     /**
