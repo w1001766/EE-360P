@@ -43,10 +43,11 @@ public class PSort {
 
       Sorter left = new Sorter(array, begin, index);
       Sorter right = new Sorter(array, index, end);
-      // left.fork();
-      // right.compute();
-      // left.join();
-      invokeAll(left, right);
+      left.fork();
+      right.fork();
+
+      left.join();
+      right.join();
       }
     }
 
@@ -62,7 +63,7 @@ public class PSort {
       
       Sorter left = new Sorter(array, begin, index);
 //      System.out.println("Subarray one: " + left);
-      Sorter right = new Sorter(array, index, end);
+      Sorter right = new Sorter(array, index+1, end);
 //      System.out.println("Subarray two: " + right);
 
       left.fork();
