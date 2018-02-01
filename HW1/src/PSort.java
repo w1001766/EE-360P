@@ -78,10 +78,8 @@ public class PSort {
       }
 
       left.fork();
-      right.fork();
-
+      right.compute();
       left.join();
-      right.join();
 
       if (PSort.debugMode) {
         System.out.println("Active threads: " + pool.getActiveThreadCount());
@@ -173,9 +171,7 @@ public class PSort {
    * @return boolean
    */
 	private static boolean edgeCase(int[] arr, int begin, int end) { 
-		if(arr.length == 0 || begin >= end)
-			return true;
-		return false;
+		return (arr.length == 0 || begin >= end);
 	}
 
   /**
