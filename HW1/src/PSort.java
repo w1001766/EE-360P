@@ -32,7 +32,21 @@ public class PSort {
         insertSort(array, begin, end);
       }
       else {
-        quickSort(array, begin, end);
+        //quickSort(array, begin, end);
+        
+      if (edgeCase(array, begin, end)) {
+        return;
+      }
+      
+      int pivot = array[(end - begin) / 2];
+      int index = partition(array, begin, end-1, pivot);
+
+      Sorter left = new Sorter(array, begin, index);
+      Sorter right = new Sorter(array, index, end);
+      // left.fork();
+      // right.compute();
+      // left.join();
+      invokeAll(left, right);
       }
     }
 
@@ -42,23 +56,23 @@ public class PSort {
       }
       
       int pivot = array[(end - begin) / 2];
-      System.out.println("Pivot: " + pivot);
+//      System.out.println("Pivot: " + pivot);
       int index = partition(array, begin, end-1, pivot);
 
       
       Sorter left = new Sorter(array, begin, index);
-      System.out.println("Subarray one: " + left);
+//      System.out.println("Subarray one: " + left);
       Sorter right = new Sorter(array, index, end);
-      System.out.println("Subarray two: " + right);
+//      System.out.println("Subarray two: " + right);
 
       left.fork();
       right.compute();
       left.join();
-      System.out.println("Active threads: " + pool.getActiveThreadCount());
+//      System.out.println("Active threads: " + pool.getActiveThreadCount());
     }
     
     private int partition(int[] array, int begin, int end, int pivot) {
-      System.out.println("Prior to partition: " + Arrays.toString(array));
+//      System.out.println("Prior to partition: " + Arrays.toString(array));
       while (begin <= end) {
         while (array[begin] < pivot) {
           begin ++;
@@ -68,15 +82,15 @@ public class PSort {
         }
         
         if (begin <= end) {
-          System.out.println("Swap begin idx: " + begin);
-          System.out.println("Swap end idx: " + end);
+//          System.out.println("Swap begin idx: " + begin);
+//          System.out.println("Swap end idx: " + end);
           swap(array, begin, end);
-          System.out.println("Post swap: " + Arrays.toString(array));
+//          System.out.println("Post swap: " + Arrays.toString(array));
           begin++;
           end--;
         }
       }
-      System.out.println("After partition: " + Arrays.toString(array));
+//      System.out.println("After partition: " + Arrays.toString(array));
       return begin;
     }
 
@@ -87,7 +101,7 @@ public class PSort {
     }
 
     private void insertSort(int[] array, int begin, int end) {
-      System.out.println("Starting insertion sort for " + Arrays.toString(array));
+//      System.out.println("Starting insertion sort for " + Arrays.toString(array));
       int i = begin;
       while(i < end) {
         int j = i;
@@ -98,7 +112,7 @@ public class PSort {
         }
         i++;
       }
-      System.out.println("Insertion sort result: " + Arrays.toString(array));
+//      System.out.println("Insertion sort result: " + Arrays.toString(array));
       
     }
   }
@@ -115,7 +129,7 @@ public class PSort {
 			return;
 
 		pool.invoke(new PSort().new Sorter(A, begin, end));
-		
+	  pool.shutdown();	
 	}
 	
 }

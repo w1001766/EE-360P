@@ -1,9 +1,10 @@
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.*;
 
 public class SortTest {
   public static void main (String[] args) {
-    int[] A1 = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+  /*  int[] A1 = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
     verifyParallelSort(A1);
     
     int[] A2 = {1, 3, 5, 7, 9};
@@ -14,7 +15,7 @@ public class SortTest {
 
     int[] A4 = {13, 59, 24, 18, 33, 20, 11, 11, 13, 50, 10999, 97, 1, 3, 5, 7, 9, 69};
     verifyParallelSort(A4);
-    
+*/    
     int[] A5 = genRandArr();
     verifyParallelSort(A5);
   }
@@ -49,7 +50,7 @@ public class SortTest {
   }
 
   public static int[] genRandArr() {
-    int[] a = new int[30];
+    int[] a = new int[5000];
     Random r = new Random();
     for (int i = 0; i < a.length; i++) {
       a[i] = r.nextInt(100);
