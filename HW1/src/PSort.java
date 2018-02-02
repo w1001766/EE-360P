@@ -62,11 +62,11 @@ public class PSort {
         return;
       }
       
-      int pivot = array[(end - begin) / 2];
+      //int pivot = array[(end - begin) / 2];
       if (PSort.debugMode) {
-        System.out.println("Pivot: " + pivot);
+      //  System.out.println("Pivot: " + pivot);
       }
-      int index = partition(array, begin, end-1, pivot);
+      int index = partition(array, begin, end-1);
 
       
       Sorter left = new Sorter(array, begin, index);
@@ -93,10 +93,22 @@ public class PSort {
      * @param array the array to be sorted
      * @param begin the start index of the array/subarray
      * @param end the end index of the array/subarray
-     * @param pivot the quicksort pivoting element
      */
-    private int partition(int[] array, int begin, int end, int pivot) {
-      if (PSort.debugMode) {
+    private int partition(int[] array, int begin, int end) {
+      int pivot = array[end-1];
+      int i = begin - 1;
+      for(int j = begin; j < end; j++){
+        if (array[j] <= pivot){
+          i++;
+          swap(array, i, j);
+        }
+      }
+
+      swap(array, i+1, end-1);
+      return i+1;
+
+      
+      /*if (PSort.debugMode) {
         System.out.println("Prior to partition: " + Arrays.toString(array));
       }
       while (begin <= end) {
@@ -123,7 +135,7 @@ public class PSort {
       if (PSort.debugMode) {
         System.out.println("After partition: " + Arrays.toString(array));
       }
-      return begin;
+      return begin;*/
     }
 
     /**
@@ -148,6 +160,13 @@ public class PSort {
       if (PSort.debugMode) {
         System.out.println("Starting insertion sort for " + Arrays.toString(array));
       }
+      for (int i = begin; i < end; i++){
+        for (int j = i; j > 0; j--){
+          if (array[j] < array[j-1])
+            swap(array, j, j-1);
+        }
+      }
+      /*
       int i = begin;
       while(i < end) {
         int j = i;
@@ -157,7 +176,7 @@ public class PSort {
           j--;
         }
         i++;
-      }
+      }*/
       if (PSort.debugMode) {
         System.out.println("Insertion sort result: " + Arrays.toString(array));
       }
