@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 
 
 public class PMerge{
+  private static final boolean debugMode = true;
   /**
    * Class that implements callable for parallel execution. Given an element
    * and the array it is to be merge with, determine its index in the final
@@ -32,12 +33,51 @@ public class PMerge{
     }
 
     public Integer call() throws Exception {
-      
-      return -1;
+      int comparitiveRank = binarySearch(this.element, 0, this.arrToMerge.length-1,
+                                         this.arrToMerge);
+      if (PMerge.debugMode) {
+        System.out.println("comparitiveRank: " + comparitiveRank);
+        System.out.println("Merge array index: " + (comparitiveRank + this.elemArrIdx));
+      }
+
+      return comparitiveRank + this.elemArrIdx;
     }
 
     private int binarySearch(int elem, int left, int right, int[] arrToMerge) {
-      return -1;
+      if (PMerge.debugMode) {
+        System.out.println("elem: " + elem + "\n" + 
+                           "left: " + left + "\n" + 
+                           "right: " + right + "\n" +
+                           "arrToMerge: " + Arrays.toString(arrToMerge));
+      }
+  
+      Integer rank = null;
+      Integer elemGreaterMidpoint = null;
+      while (right > left && right != left) {
+        int midpoint = (left + right)/2;
+        if (PMerge.debugMode) {
+          System.out.println("Left: " + left + "\nRight: " + right + 
+                             "\nMidpoint: " + midpoint);
+        }
+        if (elem < arrToMerge[midpoint]) {
+          if (PMerge.debugMode) System.out.println("elem < arrToMerge[midpoint]");
+          rank = midpoint;
+          right = midpoint;
+        } else if (elem > arrToMerge[midpoint]) {
+          if (PMerge.debugMode) System.out.println("elem > arrToMerge[midpoint]\n" + 
+                                                   "midpoint: " + midpoint + "\n" + 
+                                                   "elem: " + elem);
+          left = midpoint;
+          if (elemGreaterMidpoint == null 
+              || elemGreaterMidpoint != (midpoint + right)/2) {
+            elemGreaterMidpoint = (midpoint + right) / 2;
+          } else if (elem == arrToMerge[midpoint]) {
+            rank = midpoint + 1;
+            break;
+          } else { break; }
+        }
+      }
+      return rank != null ? rank : this.elemArrIdx;
     }
   }
 
@@ -50,7 +90,9 @@ public class PMerge{
       Future<Integer> idx = executorService.submit(new PMerge().
                                                    new Ranker(A[i],i,A.length,B));
       try {
-        C[idx.get()] = A[i];
+        int elementRank = idx.get();
+        System.out.println("elementRank: " + elementRank);
+        C[elementRank] = A[i];
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
       }
