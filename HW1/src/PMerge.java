@@ -42,7 +42,16 @@ public class PMerge{
 
       return comparitiveRank + this.elemArrIdx;
     }
-
+    
+    /**
+     * Uses binary search to determine how an element ranks up compared to
+     * another array's elements.
+     * @param elem        element to be compared
+     * @param left        starting index of compared array
+     * @param right       ending index of compared array
+     * @param arrToMerge  array element is compared to
+     * @return int
+     */
     private int binarySearch(int elem, int left, int right, int[] arrToMerge) {
       if (PMerge.debugMode) {
         System.out.println("elem: " + elem + "\n" + 
@@ -52,17 +61,20 @@ public class PMerge{
       }
   
       Integer rank = null;
-      Integer elemGreaterMidpoint = null;
+      Integer elemGreaterMidpoint = null;   // This is to track hitting the elem >
+                                            // block twice - should be replaced...
       while (right > left && right != left) {
         int midpoint = (left + right)/2;
         if (PMerge.debugMode) {
           System.out.println("Left: " + left + "\nRight: " + right + 
                              "\nMidpoint: " + midpoint);
         }
+        // Search for element's rank in bottom half of array
         if (elem < arrToMerge[midpoint]) {
           if (PMerge.debugMode) System.out.println("elem < arrToMerge[midpoint]");
           rank = midpoint;
           right = midpoint;
+        // Search for element's rank in top half of array
         } else if (elem > arrToMerge[midpoint]) {
           if (PMerge.debugMode) System.out.println("elem > arrToMerge[midpoint]\n" + 
                                                    "midpoint: " + midpoint + "\n" + 
@@ -71,12 +83,15 @@ public class PMerge{
           if (elemGreaterMidpoint == null 
               || elemGreaterMidpoint != (midpoint + right)/2) {
             elemGreaterMidpoint = (midpoint + right) / 2;
+          // Acounting for a dupe in the other array, @TODO: should either
+          // increment or decrement that dupe's index based on some logic...
           } else if (elem == arrToMerge[midpoint]) {
             rank = midpoint + 1;
             break;
           } else { break; }
         }
       }
+      // Return element's rank
       return rank != null ? rank : this.elemArrIdx;
     }
   }
