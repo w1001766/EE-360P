@@ -83,13 +83,13 @@ public class PMerge{
           if (elemGreaterMidpoint == null 
               || elemGreaterMidpoint != (midpoint + right)/2) {
             elemGreaterMidpoint = (midpoint + right) / 2;
-          // Acounting for a dupe in the other array, @TODO: should either
-          // increment or decrement that dupe's index based on some logic...
-          } else if (elem == arrToMerge[midpoint]) {
-            rank = midpoint + 1;
-            break;
-          } else { break; }
-        }
+          }
+        // Acounting for a dupe in the other array, @TODO: should either
+        // increment or decrement that dupe's index based on some logic...
+        } else if (elem == arrToMerge[midpoint]) {
+          rank = midpoint + 1;
+          break;
+        } else { break; }
       }
       // Return element's rank
       return rank != null ? rank : this.elemArrIdx;
