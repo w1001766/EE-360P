@@ -95,7 +95,7 @@ public class PSort {
      * @param end the end index of the array/subarray
      */
     private int partition(int[] array, int begin, int end) {
-      int pivot = array[end-1];
+      int pivot = array[end];
       int i = begin - 1;
       for(int j = begin; j < end; j++){
         if (array[j] <= pivot){
@@ -104,7 +104,7 @@ public class PSort {
         }
       }
 
-      swap(array, i+1, end-1);
+      swap(array, i+1, end);
       return i+1;
     }
 
