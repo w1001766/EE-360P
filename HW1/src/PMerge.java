@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 
 public class PMerge{
-  private static final boolean debugMode = true;
+  private static final boolean debugMode = false;
   private static Set usedIndices;
   /**
    * Class that implements callable for parallel execution. Given an element
@@ -34,16 +34,18 @@ public class PMerge{
     }
 
     public Integer call() throws Exception {
+      // How does this element compare to the other array's elements?
       int comparitiveRank = binarySearch(this.element, 0, this.arrToMerge.length-1,
                                          this.arrToMerge);
+      // Where do we insert this element in the merged array?
       int mergeArrIndex = comparitiveRank != this.elemArrIdx ? comparitiveRank + this.elemArrIdx :
                              this.element >= this.arrToMerge[this.arrToMerge.length - 1] ?
                                              comparitiveRank + this.arrToMerge.length :
                                              comparitiveRank + this.elemArrIdx;
-      if(!PMerge.usedIndices.add(mergeArrIndex)) {
-        mergeArrIndex = this.element > this.arrToMerge[comparitiveRank] ?
-                                       mergeArrIndex+1 : mergeArrIndex-1;
-        PMerge.usedIndices.add(mergeArrIndex);
+      // Is the target index already in use?
+      while (!PMerge.usedIndices.add(mergeArrIndex)) {
+        mergeArrIndex = this.element >= this.arrToMerge[comparitiveRank] ?
+                                        mergeArrIndex+1 : mergeArrIndex-1;
       }
       if (PMerge.debugMode) {
         System.out.println("comparitiveRank: " + comparitiveRank);
