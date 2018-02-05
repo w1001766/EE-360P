@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class PSort {
-  private static final boolean debugMode = true;
+  private static final boolean debugMode = false;
 	private static ForkJoinPool pool = new ForkJoinPool();
 
   private class Sorter extends RecursiveAction {
@@ -46,7 +46,9 @@ public class PSort {
     @Override
     protected void compute() {
       if(end - begin < 16 && end-begin >0) {
-        System.out.println("Elements: " + Integer.toString(end - begin));
+        if (PSort.debugMode) {
+          System.out.println("Elements: " + Integer.toString(end - begin));
+        }
         insertSort(array, begin, end);
       } else if(end-begin > 0) {
         quickSort(array, begin, end);
