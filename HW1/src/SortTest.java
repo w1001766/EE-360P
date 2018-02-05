@@ -50,7 +50,7 @@ public class SortTest {
   }
 
   public static int[] genRandArr() {
-    int[] a = new int[50];
+    int[] a = new int[100];
     Random r = new Random();
     for (int i = 0; i < a.length; i++) {
       a[i] = r.nextInt(100);

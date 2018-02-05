@@ -106,36 +106,6 @@ public class PSort {
 
       swap(array, i+1, end-1);
       return i+1;
-
-      
-      /*if (PSort.debugMode) {
-        System.out.println("Prior to partition: " + Arrays.toString(array));
-      }
-      while (begin <= end) {
-        while (array[begin] < pivot) {
-          begin ++;
-        }
-        while (array[end] > pivot) {
-          end --;
-        }
-        
-        if (begin <= end) {
-          if (PSort.debugMode) {
-            System.out.println("Swap begin idx: " + begin);
-            System.out.println("Swap end idx: " + end);
-          }
-          swap(array, begin, end);
-          if (PSort.debugMode) {
-            System.out.println("Post swap: " + Arrays.toString(array));
-          }
-          begin++;
-          end--;
-        }
-      }
-      if (PSort.debugMode) {
-        System.out.println("After partition: " + Arrays.toString(array));
-      }
-      return begin;*/
     }
 
     /**
@@ -166,17 +136,6 @@ public class PSort {
             swap(array, j, j-1);
         }
       }
-      /*
-      int i = begin;
-      while(i < end) {
-        int j = i;
-        while(j > begin && array[j - 1] > array[j]) {
-          //swap values
-          swap(array, j, j-1);
-          j--;
-        }
-        i++;
-      }*/
       if (PSort.debugMode) {
         System.out.println("Insertion sort result: " + Arrays.toString(array));
       }
