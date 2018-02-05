@@ -39,8 +39,13 @@ public class PMerge{
         System.out.println("comparitiveRank: " + comparitiveRank);
         System.out.println("Merge array index: " + (comparitiveRank + this.elemArrIdx));
       }
+      
+      return comparitiveRank != this.elemArrIdx ? comparitiveRank + this.elemArrIdx :
+                                this.element >= this.arrToMerge[this.arrToMerge.length - 1] ?
+                                                comparitiveRank + this.arrToMerge.length :
+                                                comparitiveRank + this.elemArrIdx;
 
-      return comparitiveRank + this.elemArrIdx;
+                                
     }
     
     /**
@@ -83,6 +88,8 @@ public class PMerge{
           if (elemGreaterMidpoint == null 
               || elemGreaterMidpoint != (midpoint + right)/2) {
             elemGreaterMidpoint = (midpoint + right) / 2;
+          } else {
+            break;
           }
         // Acounting for a dupe in the other array, @TODO: should either
         // increment or decrement that dupe's index based on some logic...
