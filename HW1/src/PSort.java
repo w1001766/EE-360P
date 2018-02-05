@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class PSort {
-  private static final boolean debugMode = false;
+  private static final boolean debugMode = true;
 	private static ForkJoinPool pool = new ForkJoinPool();
 
   private class Sorter extends RecursiveAction {
@@ -130,12 +130,14 @@ public class PSort {
       if (PSort.debugMode) {
         System.out.println("Starting insertion sort for " + Arrays.toString(array));
       }
+
       for (int i = begin; i < end; i++){
-        for (int j = i; j > 0; j--){
+        for (int j = i; j > begin; j--){
           if (array[j] < array[j-1])
             swap(array, j, j-1);
         }
       }
+
       if (PSort.debugMode) {
         System.out.println("Insertion sort result: " + Arrays.toString(array));
       }
