@@ -19,8 +19,8 @@ public class SortTest {
     int[] A5 = genRandArr(20);
     verifyParallelSort(A5);
 
-    for (int i=0; i<200; ++i) {
-      int[] tmp = genRandArr(20);
+    for (int i=0; i<10; ++i) {
+      int[] tmp = genRandArr(10000);
       verifyParallelSort(tmp);
     }
   }
