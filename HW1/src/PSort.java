@@ -128,7 +128,7 @@ public class PSort {
      */
     private void insertSort(int[] array, int begin, int end) {
       if (PSort.debugMode) {
-        System.out.println("Starting insertion sort for " + Arrays.toString(array));
+        System.out.println("Starting insertion sort for " + this);
       }
 
       for (int i = begin; i < end; i++){
@@ -139,7 +139,7 @@ public class PSort {
       }
 
       if (PSort.debugMode) {
-        System.out.println("Insertion sort result: " + Arrays.toString(array));
+        System.out.println("Insertion sort result: " + this);
       }
     }
   }
