@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 
 public class PMerge{
   private static final boolean debugMode = true;
+  private static Set usedIndices;
   /**
    * Class that implements callable for parallel execution. Given an element
    * and the array it is to be merge with, determine its index in the final
@@ -35,17 +36,20 @@ public class PMerge{
     public Integer call() throws Exception {
       int comparitiveRank = binarySearch(this.element, 0, this.arrToMerge.length-1,
                                          this.arrToMerge);
+      int mergeArrIndex = comparitiveRank != this.elemArrIdx ? comparitiveRank + this.elemArrIdx :
+                             this.element >= this.arrToMerge[this.arrToMerge.length - 1] ?
+                                             comparitiveRank + this.arrToMerge.length :
+                                             comparitiveRank + this.elemArrIdx;
+      if(!PMerge.usedIndices.add(mergeArrIndex)) {
+        mergeArrIndex = this.element > this.arrToMerge[comparitiveRank] ?
+                                       mergeArrIndex+1 : mergeArrIndex-1;
+        PMerge.usedIndices.add(mergeArrIndex);
+      }
       if (PMerge.debugMode) {
         System.out.println("comparitiveRank: " + comparitiveRank);
-        System.out.println("Merge array index: " + (comparitiveRank + this.elemArrIdx));
+        System.out.println("Merge array index: " + mergeArrIndex);
       }
-      
-      return comparitiveRank != this.elemArrIdx ? comparitiveRank + this.elemArrIdx :
-                                this.element >= this.arrToMerge[this.arrToMerge.length - 1] ?
-                                                comparitiveRank + this.arrToMerge.length :
-                                                comparitiveRank + this.elemArrIdx;
-
-                                
+      return mergeArrIndex;
     }
     
     /**
@@ -68,8 +72,9 @@ public class PMerge{
       Integer rank = null;
       Integer elemGreaterMidpoint = null;   // This is to track hitting the elem >
                                             // block twice - should be replaced...
+      int midpoint = (left + right)/2;
       while (right > left && right != left) {
-        int midpoint = (left + right)/2;
+        midpoint = (left + right)/2;
         if (PMerge.debugMode) {
           System.out.println("Left: " + left + "\nRight: " + right + 
                              "\nMidpoint: " + midpoint);
@@ -88,9 +93,7 @@ public class PMerge{
           if (elemGreaterMidpoint == null 
               || elemGreaterMidpoint != (midpoint + right)/2) {
             elemGreaterMidpoint = (midpoint + right) / 2;
-          } else {
-            break;
-          }
+          } else { break; }
         // Acounting for a dupe in the other array, @TODO: should either
         // increment or decrement that dupe's index based on some logic...
         } else if (elem == arrToMerge[midpoint]) {
@@ -99,13 +102,15 @@ public class PMerge{
         } else { break; }
       }
       // Return element's rank
-      return rank != null ? rank : this.elemArrIdx;
+      return rank == null ? this.elemArrIdx : rank;
+             //elem <= arrToMerge[midpoint] ? rank-1 : rank;
     }
   }
 
   public static void parallelMerge(int[] A, int[] B, int[]C, int numThreads){
     // TODO: Implement your parallel merge function
     final ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+    PMerge.usedIndices = Collections.synchronizedSet(new HashSet<Integer>());
    
     // Determine A's elements' indices
     for (int i=0; i<A.length; ++i) {
@@ -113,7 +118,6 @@ public class PMerge{
                                                    new Ranker(A[i],i,A.length,B));
       try {
         int elementRank = idx.get();
-        System.out.println("elementRank: " + elementRank);
         C[elementRank] = A[i];
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
