@@ -46,7 +46,6 @@ public class PSort {
     @Override
     protected void compute() {
       if(end - begin < 16 && end-begin >0) {
-        System.out.println("Elements: " + Integer.toString(end - begin));
         insertSort(array, begin, end);
       } else if(end-begin > 0) {
         quickSort(array, begin, end);
@@ -62,29 +61,14 @@ public class PSort {
         return;
       }
       
-      //int pivot = array[(end - begin) / 2];
-      if (PSort.debugMode) {
-      //  System.out.println("Pivot: " + pivot);
-      }
       int index = partition(array, begin, end-1);
-
       
       Sorter left = new Sorter(array, begin, index);
-      if (PSort.debugMode) {
-        System.out.println("Subarray one: " + left);
-      }
       Sorter right = new Sorter(array, index, end);
-      if (PSort.debugMode) {
-        System.out.println("Subarray two: " + right);
-      }
 
       left.fork();
       right.compute();
       left.join();
-
-      if (PSort.debugMode) {
-        System.out.println("Active threads: " + pool.getActiveThreadCount());
-      }
     }
     
     /**
@@ -106,36 +90,6 @@ public class PSort {
 
       swap(array, i+1, end-1);
       return i+1;
-
-      
-      /*if (PSort.debugMode) {
-        System.out.println("Prior to partition: " + Arrays.toString(array));
-      }
-      while (begin <= end) {
-        while (array[begin] < pivot) {
-          begin ++;
-        }
-        while (array[end] > pivot) {
-          end --;
-        }
-        
-        if (begin <= end) {
-          if (PSort.debugMode) {
-            System.out.println("Swap begin idx: " + begin);
-            System.out.println("Swap end idx: " + end);
-          }
-          swap(array, begin, end);
-          if (PSort.debugMode) {
-            System.out.println("Post swap: " + Arrays.toString(array));
-          }
-          begin++;
-          end--;
-        }
-      }
-      if (PSort.debugMode) {
-        System.out.println("After partition: " + Arrays.toString(array));
-      }
-      return begin;*/
     }
 
     /**
@@ -157,28 +111,11 @@ public class PSort {
      * @param end index of ending ekement of array/subarray
      */
     private void insertSort(int[] array, int begin, int end) {
-      if (PSort.debugMode) {
-        System.out.println("Starting insertion sort for " + Arrays.toString(array));
-      }
       for (int i = begin; i < end; i++){
         for (int j = i; j > 0; j--){
           if (array[j] < array[j-1])
             swap(array, j, j-1);
         }
-      }
-      /*
-      int i = begin;
-      while(i < end) {
-        int j = i;
-        while(j > begin && array[j - 1] > array[j]) {
-          //swap values
-          swap(array, j, j-1);
-          j--;
-        }
-        i++;
-      }*/
-      if (PSort.debugMode) {
-        System.out.println("Insertion sort result: " + Arrays.toString(array));
       }
     }
   }

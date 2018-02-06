@@ -1,5 +1,5 @@
 //UT-EID=dpv292
-
+//UT-EID=am74874
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -39,9 +39,6 @@ public class PMerge{
       }
       int comparitiveRank = iterativeSearch(this.element, this.arrToMerge, 
                                             this.arrToMerge.length);
-      if (PMerge.debugMode) {
-        System.out.println("Comparitive rank: " + comparitiveRank);
-      }
       int mergeArrIndex = comparitiveRank + this.elemArrIdx;
       if (this.arrToMerge.length == 1) {
         mergeArrIndex = comparitiveRank;
@@ -50,26 +47,13 @@ public class PMerge{
         mergeArrIndex = comparitiveRank + this.arrToMerge.length;
       }
       while (!PMerge.usedIndices.add(mergeArrIndex)) {
-        if (PMerge.debugMode) {
-          System.out.println("Failed using index " + mergeArrIndex + " for element " + this.element);
-        }
-        /*
-        mergeArrIndex = this.element >= this.arrToMerge[comparitiveRank] ?
-                                        mergeArrIndex+1 : mergeArrIndex-1;*/
         ++mergeArrIndex;
-      }
-
-      if (PMerge.debugMode) {
-        System.out.println("Merge array index: " + mergeArrIndex);
       }
 
       return mergeArrIndex;
     }
 
     private int iterativeSearch(int elem, int[] arrToMerge, int arrLen) {
-      if (PMerge.debugMode) {
-        System.out.println("Ranking element " + elem);
-      }
       for (int i=0; i < arrLen-1; ++i) {
         if (elem <= arrToMerge[i] && i == 0) {
           return 0;
@@ -77,7 +61,6 @@ public class PMerge{
           return i+1;
         }
       }
-
       return this.elemArrIdx;
     }
     
