@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 
 public class PMerge{
-  private static final boolean debugMode = false;
+  private static final boolean debugMode = true;
   private static Set usedIndices;
   /**
    * Class that implements callable for parallel execution. Given an element
@@ -36,6 +36,9 @@ public class PMerge{
     public Integer call() throws Exception {
       int comparitiveRank = iterativeSearch(this.element, this.arrToMerge, 
                                             this.arrToMerge.length);
+      if (PMerge.debugMode) {
+        System.out.println("Comparitive rank: " + comparitiveRank);
+      }
       int mergeArrIndex = comparitiveRank + this.elemArrIdx;
       if (this.arrToMerge.length == 1) {
         mergeArrIndex = comparitiveRank;
@@ -47,12 +50,13 @@ public class PMerge{
         if (PMerge.debugMode) {
           System.out.println("Failed using index " + mergeArrIndex + " for element " + this.element);
         }
+        /*
         mergeArrIndex = this.element >= this.arrToMerge[comparitiveRank] ?
-                                        mergeArrIndex+1 : mergeArrIndex-1;
+                                        mergeArrIndex+1 : mergeArrIndex-1;*/
+        ++mergeArrIndex;
       }
 
       if (PMerge.debugMode) {
-        System.out.println("comparitiveRank: " + comparitiveRank);
         System.out.println("Merge array index: " + mergeArrIndex);
       }
 
