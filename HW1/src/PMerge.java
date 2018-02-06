@@ -34,95 +34,44 @@ public class PMerge{
     }
 
     public Integer call() throws Exception {
-      // How does this element compare to the other array's elements?
-      int comparitiveRank = binarySearch(this.element, 0, this.arrToMerge.length-1,
-                                         this.arrToMerge);
-      // Where do we insert this element in the merged array?
-      int mergeArrIndex = comparitiveRank != this.elemArrIdx ? 
-                            comparitiveRank + this.elemArrIdx :
-                            this.element > this.arrToMerge[this.arrToMerge.length - 1] ?
-                              comparitiveRank + this.arrToMerge.length :
-                              comparitiveRank + this.elemArrIdx;
-                                              /*
-      int mergeArrIndex;
-      if (comparitiveRank == this.elemArrIdx) {
-        if (this.element > this.arrToMerge[this.arrToMerge.length-1]) {
-          mergeArrIndex = this.arrToMerge.length + comparitiveRank;
-        } else if (this.element == this.arrToMerge[this.arrToMerge.length-1]) {
-          mergeArrIndex = this.elemArrSize > this.arrToMerge.length ? comparitiveRank :
-                                                                      this.arrToMerge.length - 1;
-        } else {
-          mergeArrIndex = comparitiveRank + this.arrToMerge.length;
-        }
-      } else {
-          mergeArrIndex = comparitiveRank + this.elemArrIdx;
+      int comparitiveRank = iterativeSearch(this.element, this.arrToMerge, 
+                                            this.arrToMerge.length);
+      int mergeArrIndex = comparitiveRank + this.elemArrIdx;
+      if (this.arrToMerge.length == 1) {
+        mergeArrIndex = comparitiveRank;
       }
-      */
-      // Is the target index already in use?
+      if (this.element > this.arrToMerge[this.arrToMerge.length-1]) {
+        mergeArrIndex = comparitiveRank + this.arrToMerge.length;
+      }
       while (!PMerge.usedIndices.add(mergeArrIndex)) {
+        System.out.println("Failed using index " + mergeArrIndex + " for element " + this.element);
         mergeArrIndex = this.element >= this.arrToMerge[comparitiveRank] ?
                                         mergeArrIndex+1 : mergeArrIndex-1;
       }
+
       if (PMerge.debugMode) {
         System.out.println("comparitiveRank: " + comparitiveRank);
         System.out.println("Merge array index: " + mergeArrIndex);
       }
+
       return mergeArrIndex;
     }
-    
-    /**
-     * Uses binary search to determine how an element ranks up compared to
-     * another array's elements.
-     * @param elem        element to be compared
-     * @param left        starting index of compared array
-     * @param right       ending index of compared array
-     * @param arrToMerge  array element is compared to
-     * @return int
-     */
-    private int binarySearch(int elem, int left, int right, int[] arrToMerge) {
+
+    private int iterativeSearch(int elem, int[] arrToMerge, int arrLen) {
       if (PMerge.debugMode) {
-        System.out.println("elem: " + elem + "\n" + 
-                           "left: " + left + "\n" + 
-                           "right: " + right + "\n" +
-                           "arrToMerge: " + Arrays.toString(arrToMerge));
+        System.out.println("Ranking element " + elem);
       }
-  
-      Integer rank = null;
-      Integer elemGreaterMidpoint = null;   // This is to track hitting the elem >
-                                            // block twice - should be replaced...
-      int midpoint = (left + right)/2;
-      while (right > left && right != left) {
-        midpoint = (left + right)/2;
-        if (PMerge.debugMode) {
-          System.out.println("Left: " + left + "\nRight: " + right + 
-                             "\nMidpoint: " + midpoint);
+      for (int i=0; i < arrLen-1; ++i) {
+        if (elem <= arrToMerge[i] && i == 0) {
+          return 0;
+        } else if (elem >= arrToMerge[i] && elem <= arrToMerge[i+1]) {
+          return i+1;
         }
-        // Search for element's rank in bottom half of array
-        if (elem < arrToMerge[midpoint]) {
-          if (PMerge.debugMode) System.out.println("elem < arrToMerge[midpoint]");
-          rank = midpoint;
-          right = midpoint;
-        // Search for element's rank in top half of array
-        } else if (elem > arrToMerge[midpoint]) {
-          if (PMerge.debugMode) System.out.println("elem > arrToMerge[midpoint]\n" + 
-                                                   "midpoint: " + midpoint + "\n" + 
-                                                   "elem: " + elem);
-          left = midpoint;
-          if (elemGreaterMidpoint == null 
-              || elemGreaterMidpoint != (midpoint + right)/2) {
-            elemGreaterMidpoint = (midpoint + right) / 2;
-          } else { break; }
-        // Acounting for a dupe in the other array, @TODO: should either
-        // increment or decrement that dupe's index based on some logic...
-        } else if (elem == arrToMerge[midpoint]) {
-          rank = midpoint + 1;
-          break;
-        } else { break; }
       }
-      // Return element's rank
-      return rank == null ? this.elemArrIdx : rank;
-             //elem <= arrToMerge[midpoint] ? rank-1 : rank;
+
+      return this.elemArrIdx;
     }
+    
   }
 
   public static void parallelMerge(int[] A, int[] B, int[]C, int numThreads){
