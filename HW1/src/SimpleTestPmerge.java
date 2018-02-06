@@ -5,10 +5,26 @@ public class SimpleTestPmerge {
     int[] A1 = {1, 3, 5, 7, 9};
     int[] B1 = {2, 4, 6, 8, 10};
     verifyParallelMerge(A1, B1);
+
+    int[] AA1 = {1,3,5,7,9,11};
+    int[] BB1 = {2,4,6,8,10};
+    verifyParallelMerge(AA1,BB1);
+
+    int[] AAA1 = {1,3,5,7,9};
+    int[] BBB1 = {2,4,6,8,10,12};
+    verifyParallelMerge(AAA1,BBB1);
     
     int[] A2 = {13, 60, 1000, 3000, 129948};
     int[] B2 = {1, 2, 3, 5, 10};
     verifyParallelMerge(A2, B2);
+
+    int[] AA2 = {13, 60, 1000, 3000, 129948, 69000};
+    int[] BB2 = {1, 2, 3, 5, 10};
+    verifyParallelMerge(AA2, BB2);
+
+    int[] AAA2 = {13, 60, 1000, 3000, 129948};
+    int[] BBB2 = {1, 2, 3, 5, 10, 69};
+    verifyParallelMerge(AAA2, BBB2);
 
     int[] A3 = {0,1,2,3};
     int[] B3 = {0,1,2,3};
