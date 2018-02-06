@@ -9,6 +9,14 @@ public class SimpleTestPmerge {
     int[] A2 = {13, 60, 1000, 3000, 129948};
     int[] B2 = {1, 2, 3, 5, 10};
     verifyParallelMerge(A2, B2);
+
+    int[] A3 = {0,1,2,3};
+    int[] B3 = {0,1,2,3};
+    verifyParallelMerge(A3,B3);
+
+    int[] A4 = {1000, 2000, 3000};
+    int[] B4 = {3000};
+    verifyParallelMerge(A4,B4);
   }
 
   static void verifyParallelMerge(int[] A, int[] B) {

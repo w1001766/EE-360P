@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 
 public class PMerge{
-  private static final boolean debugMode = false;
+  private static final boolean debugMode = true;
   private static Set usedIndices;
   /**
    * Class that implements callable for parallel execution. Given an element
@@ -38,10 +38,26 @@ public class PMerge{
       int comparitiveRank = binarySearch(this.element, 0, this.arrToMerge.length-1,
                                          this.arrToMerge);
       // Where do we insert this element in the merged array?
-      int mergeArrIndex = comparitiveRank != this.elemArrIdx ? comparitiveRank + this.elemArrIdx :
-                             this.element >= this.arrToMerge[this.arrToMerge.length - 1] ?
-                                             comparitiveRank + this.arrToMerge.length :
-                                             comparitiveRank + this.elemArrIdx;
+      int mergeArrIndex = comparitiveRank != this.elemArrIdx ? 
+                            comparitiveRank + this.elemArrIdx :
+                            this.element > this.arrToMerge[this.arrToMerge.length - 1] ?
+                              comparitiveRank + this.arrToMerge.length :
+                              comparitiveRank + this.elemArrIdx;
+                                              /*
+      int mergeArrIndex;
+      if (comparitiveRank == this.elemArrIdx) {
+        if (this.element > this.arrToMerge[this.arrToMerge.length-1]) {
+          mergeArrIndex = this.arrToMerge.length + comparitiveRank;
+        } else if (this.element == this.arrToMerge[this.arrToMerge.length-1]) {
+          mergeArrIndex = this.elemArrSize > this.arrToMerge.length ? comparitiveRank :
+                                                                      this.arrToMerge.length - 1;
+        } else {
+          mergeArrIndex = comparitiveRank + this.arrToMerge.length;
+        }
+      } else {
+          mergeArrIndex = comparitiveRank + this.elemArrIdx;
+      }
+      */
       // Is the target index already in use?
       while (!PMerge.usedIndices.add(mergeArrIndex)) {
         mergeArrIndex = this.element >= this.arrToMerge[comparitiveRank] ?
