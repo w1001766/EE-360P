@@ -6,9 +6,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class PSort {
-  private static final boolean debugMode = false;
-	private static ForkJoinPool pool = new ForkJoinPool();
-
   private class Sorter extends RecursiveAction {
     private int[] array;
     private int begin;
