@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 
 public class PMerge{
-  private static final boolean debugMode = true;
+  private static final boolean debugMode = false;
   private static Set usedIndices;
   /**
    * Class that implements callable for parallel execution. Given an element
