@@ -44,7 +44,9 @@ public class PMerge{
         mergeArrIndex = comparitiveRank + this.arrToMerge.length;
       }
       while (!PMerge.usedIndices.add(mergeArrIndex)) {
-        System.out.println("Failed using index " + mergeArrIndex + " for element " + this.element);
+        if (PMerge.debugMode) {
+          System.out.println("Failed using index " + mergeArrIndex + " for element " + this.element);
+        }
         mergeArrIndex = this.element >= this.arrToMerge[comparitiveRank] ?
                                         mergeArrIndex+1 : mergeArrIndex-1;
       }
