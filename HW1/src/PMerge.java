@@ -6,7 +6,6 @@ import java.util.concurrent.*;
 
 
 public class PMerge{
-  private static final boolean debugMode = true;
   /**
    * Class that implements callable for parallel execution. Given an element
    * and the array it is to be merge with, determine its index in the final
@@ -17,7 +16,7 @@ public class PMerge{
     private int elemArrIdx;
     private int elemArrSize;
     private int[] arrToMerge = null;
-    private Set usedIndices;
+    private Set<Integer> usedIndices;
 
     /**
      * Constructor for the Ranker class.
@@ -26,7 +25,7 @@ public class PMerge{
      * @param elemArrSize the element's original array's size
      * @param arrToMerge  the array containing the elements to merge with
      */
-    public Ranker(int element, int elemArrIdx, int elemArrSize, int[] arrToMerge, Set usedIndices) {
+    public Ranker(int element, int elemArrIdx, int elemArrSize, int[] arrToMerge, Set<Integer> usedIndices) {
       this.element = element;
       this.elemArrIdx = elemArrIdx;
       this.elemArrSize = elemArrSize;
@@ -70,7 +69,7 @@ public class PMerge{
   public static void parallelMerge(int[] A, int[] B, int[]C, int numThreads){
     // TODO: Implement your parallel merge function
     final ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
-    final Set usedIndices = Collections.synchronizedSet(new HashSet<Integer>());
+    final Set<Integer> usedIndices = Collections.synchronizedSet(new HashSet<Integer>());
    
     // Determine A's elements' indices
     for (int i=0; i<A.length; ++i) {
