@@ -139,7 +139,7 @@ public class PSort {
    * @param end ending index of the array
    */
 	public static void parallelSort(int[] A, int begin, int end) {
-    pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+    final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 		if(edgeCase(A, begin, end))
 			return;
 

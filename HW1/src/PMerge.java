@@ -7,7 +7,6 @@ import java.util.concurrent.*;
 
 public class PMerge{
   private static final boolean debugMode = true;
-  private static Set usedIndices;
   /**
    * Class that implements callable for parallel execution. Given an element
    * and the array it is to be merge with, determine its index in the final
@@ -18,6 +17,7 @@ public class PMerge{
     private int elemArrIdx;
     private int elemArrSize;
     private int[] arrToMerge = null;
+    private Set usedIndices;
 
     /**
      * Constructor for the Ranker class.
@@ -26,11 +26,12 @@ public class PMerge{
      * @param elemArrSize the element's original array's size
      * @param arrToMerge  the array containing the elements to merge with
      */
-    public Ranker(int element, int elemArrIdx, int elemArrSize, int[] arrToMerge) {
+    public Ranker(int element, int elemArrIdx, int elemArrSize, int[] arrToMerge, Set usedIndices) {
       this.element = element;
       this.elemArrIdx = elemArrIdx;
       this.elemArrSize = elemArrSize;
       this.arrToMerge = arrToMerge;
+      this.usedIndices = usedIndices;
     }
 
     public Integer call() throws Exception {
@@ -46,7 +47,7 @@ public class PMerge{
       if (this.element > this.arrToMerge[this.arrToMerge.length-1]) {
         mergeArrIndex = comparitiveRank + this.arrToMerge.length;
       }
-      while (!PMerge.usedIndices.add(mergeArrIndex)) {
+      while (!this.usedIndices.add(mergeArrIndex)) {
         ++mergeArrIndex;
       }
 
@@ -69,12 +70,12 @@ public class PMerge{
   public static void parallelMerge(int[] A, int[] B, int[]C, int numThreads){
     // TODO: Implement your parallel merge function
     final ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
-    PMerge.usedIndices = Collections.synchronizedSet(new HashSet<Integer>());
+    final Set usedIndices = Collections.synchronizedSet(new HashSet<Integer>());
    
     // Determine A's elements' indices
     for (int i=0; i<A.length; ++i) {
       Future<Integer> idx = executorService.submit(new PMerge().
-                                                   new Ranker(A[i],i,A.length,B));
+                                                   new Ranker(A[i],i,A.length,B,usedIndices));
       try {
         int elementRank = idx.get();
         C[elementRank] = A[i];
@@ -86,7 +87,7 @@ public class PMerge{
     // Determine B's elements' indices
     for (int j=0; j<B.length; ++j) {
       Future<Integer> idx = executorService.submit(new PMerge().
-                                                   new Ranker(B[j],j,B.length,A));
+                                                   new Ranker(B[j],j,B.length,A,usedIndices));
       try {
         int elementRank = idx.get();
         C[elementRank] = B[j];
