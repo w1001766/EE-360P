@@ -102,7 +102,8 @@ public class PMerge{
       Future<Integer> idx = executorService.submit(new PMerge().
                                                    new Ranker(B[j],j,B.length,A));
       try {
-        C[idx.get()] = B[j];
+        int elementRank = idx.get();
+        C[elementRank] = B[j];
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
       }
