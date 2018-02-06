@@ -16,8 +16,13 @@ public class SortTest {
     int[] A4 = {13, 59, 24, 18, 33, 20, 11, 11, 13, 50, 10999, 97, 1, 3, 5, 7, 9, 69};
     verifyParallelSort(A4);
     
-    int[] A5 = genRandArr();
+    int[] A5 = genRandArr(20);
     verifyParallelSort(A5);
+
+    for (int i=0; i<10; ++i) {
+      int[] tmp = genRandArr(10000);
+      verifyParallelSort(tmp);
+    }
   }
 
   static void verifyParallelSort(int[] A) {
@@ -49,11 +54,11 @@ public class SortTest {
     System.out.println("=========================================================");
   }
 
-  public static int[] genRandArr() {
-    int[] a = new int[50];
+  public static int[] genRandArr(int n) {
+    int[] a = new int[n];
     Random r = new Random();
     for (int i = 0; i < a.length; i++) {
-      a[i] = r.nextInt(100);
+      a[i] = r.nextInt(20);
     }
     return a;
   }
