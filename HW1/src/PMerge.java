@@ -34,6 +34,9 @@ public class PMerge{
     }
 
     public Integer call() throws Exception {
+      if (this.arrToMerge.length == 0) {
+        return this.elemArrIdx;
+      }
       int comparitiveRank = iterativeSearch(this.element, this.arrToMerge, 
                                             this.arrToMerge.length);
       if (PMerge.debugMode) {
@@ -111,5 +114,10 @@ public class PMerge{
   
     // Tasks complete
     executorService.shutdown();
+    try {
+      executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }
