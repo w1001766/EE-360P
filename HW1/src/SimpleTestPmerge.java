@@ -78,6 +78,17 @@ public class SimpleTestPmerge {
       System.out.println("Your parallel sorting algorithm is not correct");
       System.out.println("=========================================================");
     }
+
+
+    int[] BB4 = {1000, 2000, 3000};
+    int[] AA4 = {3000};
+    try {
+      verifyParallelMerge(AA4, BB4);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Your parallel sorting algorithm is not correct");
+      System.out.println("=========================================================");
+    }
   }
 
   static void verifyParallelMerge(int[] A, int[] B) {
