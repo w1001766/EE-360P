@@ -5,15 +5,13 @@
 import java.util.concurrent.Semaphore; // for implementation using Semaphores
 
 public class ThreadSynch {
-  private static final boolean debug = true;
+  private static final boolean debug = false;
   Semaphore countingSemaphore = null;
   Semaphore[] threadSemaphores = null;
-  Semaphore blockingSemaphore = null;
 
 	public ThreadSynch(int parties) {
     // "Gate" semaphore
     this.countingSemaphore = new Semaphore(parties);
-    this.blockingSemaphore = new Semaphore(1);
     
     threadSemaphores = new Semaphore[parties];
     for (int i = 0; i < parties; ++i) {
