@@ -1,6 +1,6 @@
 /*
  * EID's of group members
- * 
+ * dpv292
  */
 import java.util.concurrent.Semaphore; // for implementation using Semaphores
 
@@ -24,7 +24,7 @@ public class ThreadSynch {
 	
 	public int await() throws InterruptedException {
     
-    if (this.countingSemaphore.availablePermits() == 1) {
+    if (this.countingSemaphore.availablePermits() == 0) {
       if (ThreadSynch.debug) {
         System.out.println("CountingSemaphore has no permits left");
       }
@@ -37,14 +37,12 @@ public class ThreadSynch {
       }
       if (allAwaited) {
         this.countingSemaphore.release();
-        this.blockingSemaphore.acquire();
         for (int i = 0; i < this.threadSemaphores.length; ++i) {
           if (ThreadSynch.debug) {
             System.out.println("Semaphore relasing: " + this.threadSemaphores[i].toString());
           }
           this.threadSemaphores[i].release();
         }
-        this.blockingSemaphore.release();
         return 0;
       }
     } else {
