@@ -24,10 +24,12 @@ public class ThreadSynch {
 	
 	public int await() throws InterruptedException {
     
-    if (this.countingSemaphore.availablePermits() == 0) {
+    if (this.countingSemaphore.availablePermits() == 1) {
       if (ThreadSynch.debug) {
-        System.out.println("CountingSemaphore has no permits left");
+        System.out.println("CountingSemaphore has 1 permit left");
       }
+      this.threadSemaphores[0].acquire();
+      this.countingSemaphore.acquire();
       boolean allAwaited = true;
       for (int i = 0; i < this.threadSemaphores.length; ++i) {
           if (ThreadSynch.debug) {
@@ -36,12 +38,15 @@ public class ThreadSynch {
         allAwaited |= this.threadSemaphores[i].availablePermits() == 0;
       }
       if (allAwaited) {
-        this.countingSemaphore.release();
         for (int i = 0; i < this.threadSemaphores.length; ++i) {
-          if (ThreadSynch.debug) {
-            System.out.println("Semaphore relasing: " + this.threadSemaphores[i].toString());
-          }
           this.threadSemaphores[i].release();
+          if (ThreadSynch.debug) {
+            System.out.println("Semaphore released: " + this.threadSemaphores[i].toString());
+          }
+        }
+        this.countingSemaphore.release(this.threadSemaphores.length);
+        if (ThreadSynch.debug) {
+          System.out.println("Counting semaphore reset: " + this.countingSemaphore.toString());
         }
         return 0;
       }
@@ -59,7 +64,7 @@ public class ThreadSynch {
         }
         countingSemaphore.acquire();
         if (ThreadSynch.debug) {
-          System.out.println("Counting sempaphore: " + this.countingSemaphore.toString());
+          System.out.println("Counting semaphore: " + this.countingSemaphore.toString());
         }
         return threadCount;
       }
