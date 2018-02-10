@@ -24,15 +24,24 @@ public class ThreadSynch {
 	
 	public int await() throws InterruptedException {
     
-    if (this.countingSemaphore.availablePermits() == 0) {
+    if (this.countingSemaphore.availablePermits() == 1) {
+      if (ThreadSynch.debug) {
+        System.out.println("CountingSemaphore has no permits left");
+      }
       boolean allAwaited = true;
       for (int i = 0; i < this.threadSemaphores.length; ++i) {
+          if (ThreadSynch.debug) {
+            System.out.println("Semaphore checking: " + this.threadSemaphores[i].toString());
+          }
         allAwaited |= this.threadSemaphores[i].availablePermits() == 0;
       }
       if (allAwaited) {
         this.countingSemaphore.release();
         this.blockingSemaphore.acquire();
         for (int i = 0; i < this.threadSemaphores.length; ++i) {
+          if (ThreadSynch.debug) {
+            System.out.println("Semaphore relasing: " + this.threadSemaphores[i].toString());
+          }
           this.threadSemaphores[i].release();
         }
         this.blockingSemaphore.release();
@@ -41,9 +50,19 @@ public class ThreadSynch {
     } else {
       int threadCount = this.countingSemaphore.availablePermits() - 1;
       if (threadSemaphores[threadCount].availablePermits() != 0) {
-        System.out.println("Releasing thread: " + threadCount);
+        if (ThreadSynch.debug) {
+          System.out.println("Semaphore number: " + threadCount);
+          System.out.println("Semaphore acquiring lock: " + this.threadSemaphores[threadCount].toString());
+        }
         this.threadSemaphores[threadCount].acquire();
+        if (ThreadSynch.debug) {
+          System.out.println("Semaphore number: " + threadCount);
+          System.out.println("Semaphore acquiring lock: " + this.threadSemaphores[threadCount].toString());
+        }
         countingSemaphore.acquire();
+        if (ThreadSynch.debug) {
+          System.out.println("Counting sempaphore: " + this.countingSemaphore.toString());
+        }
         return threadCount;
       }
     }
