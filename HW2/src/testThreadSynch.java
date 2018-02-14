@@ -20,6 +20,7 @@ public class testThreadSynch implements Runnable {
 			}
 			System.out.println("Thread " + Thread.currentThread().getId() + " is leaving round:" + round);
 		}
+    //System.out.println("-------------------------------\n" + "Permits left: " + gate.block.availablePermits());
 	}
 	
 	public static void main(String[] args) {
