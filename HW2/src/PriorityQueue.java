@@ -1,16 +1,29 @@
-
+import java.util.*;
+import java.util.concurrent.*;
 public class PriorityQueue {
+  PriorityQueue <Node> queue;
+  ReentrantLock head;
+  ReentrantLock tail;
+  // Condition full;
+  // Condition empty;
+
 
 	public PriorityQueue(int maxSize) {
-        // Creates a Priority queue with maximum allowed size as capacity
-    
-	}
+    // Creates a Priority queue with maximum allowed size as capacity
+	  queue = new PriorityQueue<>(maxSize);
+    head = new ReentrantLock();
+    tail = new ReentrantLock();
+    full = lock.newCondition();
+    empty = lock.newCondition();
+  }
 
 	public int add(String name, int priority) {
     // Adds the name with its priority to this queue.
     // Returns the current position in the list where the name was inserted;
     // otherwise, returns -1 if the name is already present in the list.
     // This method blocks when the list is full.
+    
+
     return -1;
 	}
 
