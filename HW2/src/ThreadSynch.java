@@ -5,40 +5,45 @@
 import java.util.concurrent.Semaphore; // for implementation using Semaphores
 
 public class ThreadSynch {
-  Semaphore countingSemaphore = null;
-  public Semaphore block = null;
-  Semaphore mutex = null;
-  Semaphore mutex2 = null;
-  int parties = 0; int count = 0;
+  private final int totalThreads;
+  private int availablePermits;
+  private Semaphore waitingRoom;
+  private Semaphore entrance;
 
 	public ThreadSynch(int parties) {
-    this.countingSemaphore = new Semaphore(parties);
-    this.block = new Semaphore(0);
-    this.mutex = new Semaphore(1);
-    this.mutex2 = new Semaphore(1);
-    this.parties = parties;
-    this.count = 0;
+    this.totalThreads = parties;
+    this.availablePermits = parties;
+    this.waitingRoom = new Semaphore(0);
+
+    // Ready to take first thread
+    this.entrance = new Semaphore(1);
 	}
 	
 	public int await() throws InterruptedException {
+    // Don't let multiple threads try and enter holding at once
+    try {
+      this.entrance.acquire();
+    } catch (InterruptedException ie) {
+      ie.printStackTrace();
+    }
+    --this.availablePermits;
+    this.entrance.release();
     
-    mutex.acquire();
-    count += 1;
-
-    if(count == parties){
-      System.out.println("Releasing threads...");
-      count = 0;
-      block.release(parties - 1);
-      mutex.release();
-      return count;
+    /********* Critical Section **********/
+    // Thread must wait for all threads to call await, i.e. all in waiting room
+    if (this.availablePermits > 0) {
+      try {
+        this.waitingRoom.acquire();
+      } catch (InterruptedException ie) {
+        ie.printStackTrace();
+      }
+    }
+    // No more permits left means all threads have called await() so release all
+    else {
+      this.availablePermits = this.totalThreads;
+      this.waitingRoom.release(this.totalThreads -1);
     }
 
-    else{
-      mutex.release();
-      mutex2.acquire();  
-      block.acquire();
-      mutex2.release();
-      return parties - count;
-    }
+    return this.availablePermits;
   }
 }
