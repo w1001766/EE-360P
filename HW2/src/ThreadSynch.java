@@ -41,7 +41,7 @@ public class ThreadSynch {
     // No more permits left means all threads have called await() so release all
     else {
       this.availablePermits = this.totalThreads;
-      this.waitingRoom.release(this.totalThreads -1);
+      this.waitingRoom.release(this.totalThreads -1); // Last thread not waiting
     }
 
     return this.availablePermits;
