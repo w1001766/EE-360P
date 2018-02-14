@@ -1,15 +1,15 @@
 public class FairReadWriteLock {
   private static int totalRWRequests = 0;
   private static int RWRequestsServed = 0;
-	private static int readers = 0;
-  private static int writers = 0;
+	private static int activeReaders = 0;
+  private static int activeWriters = 0;
 
 	public synchronized void beginRead() {
     // This thread is served after preceeding threads
     int readThreadPriority = totalRWRequests++;
     
     // Wait for preceeding reader threads to be served
-    while (readers > 0 || RWRequestsServed < totalRWRequests) {
+    while (activeWriters > 0 || RWRequestsServed < totalRWRequests) {
       try {
         wait();
       } catch (InterruptedException ie) {
@@ -18,13 +18,13 @@ public class FairReadWriteLock {
     }
     
     // Thread is now reading
-    ++readers;
+    ++activeReaders;
     ++RWRequestsServed;
     notifyAll();
   }
 	
 	public synchronized void endRead() {
-    if (--readers == 0) notifyAll();
+    if (--activeReaders == 0) notifyAll();
   }
 	
 	public synchronized void beginWrite() {
@@ -32,7 +32,8 @@ public class FairReadWriteLock {
     int writeThreadPriority = totalRWRequests++;
 
     // Wait for preceeding reader and writer threads to be served
-    while (RWRequestsServed < writeThreadPriority || readers > 0 || writers > 0) {
+    while (activeReaders > 0 || activeWriters > 0
+          || RWRequestsServed < writeThreadPriority) {
       try {
         wait();
       } catch (InterruptedException ie) {
@@ -41,13 +42,12 @@ public class FairReadWriteLock {
     }
     
     // Thread is now writing
-    ++writers;
+    ++activeWriters;
     ++RWRequestsServed;
     notifyAll();
   }
 	
   public synchronized void endWrite() {
-    if (--writers == 0) notifyAll();
+    if (--activeWriters == 0) notifyAll();
   }
 }
-	
