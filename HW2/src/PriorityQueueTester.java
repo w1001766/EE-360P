@@ -33,6 +33,10 @@ class tester1 implements Runnable{
       for (int i=0; i<5; ++i) {
         pq.add(names[i], priorities[i]);
       }
+
+      for (int i=0; i<5; ++i) {
+        System.out.println(pq.getFirst());
+      }
     } catch (Exception e) {
       e.printStackTrace();
     }

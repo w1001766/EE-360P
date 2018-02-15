@@ -20,7 +20,7 @@ public class PriorityQueue {
 
       public Node(){
         data = null;
-        priority = -1;
+        priority = 10;
         next = null;
         nodeLock = new ReentrantLock();
       }
@@ -70,34 +70,40 @@ public class PriorityQueue {
       }
 
       //Search if the name exists in the pqueue
-      if(search(name) == -1) return -1;
+      if(search(name) != -1) return -1;
 
       //Search for the place to add the new node.
 
       while(!found){
         //Edge case: inserting in an empty queue
-        if(first == null && second == null){
+        if(first == head && second == tail){
+          System.out.println("Using edge case 0");
           first.next = n;
           n.next = second;
           found = true;
         }
         
         //Edge case: inserting at beginning of queue
-        else if(first == null && (second.priority < n.priority)){
+        else if(first == head && (second.priority < n.priority)){
+          System.out.println("Using edge case 1");
+          System.out.println("name: " + second.data);
+          System.out.println("priority: " + second.priority);
           first.next = n;
           n.next = second;
           found = true;
         }
 
         //Edge case: inserting at end of queue
-        else if((first.priority > n.priority) && second == null){
+        else if((first.priority > n.priority) && second == tail){
+          System.out.println("Using edge case 2");
           first.next = n;
           n.next = second;
           found = true;
         }
         
         //Found the right place to insert (in the general case)
-        else if((first.priority <= n.priority) && (n.priority < second.priority)){
+        else if((second.priority <= n.priority) && (n.priority < first.priority)){
+          System.out.println("Using edge case 3");
           first.next = n;
           n.next = second;
           found = true;
@@ -105,9 +111,11 @@ public class PriorityQueue {
         
         //Hand-over-hand method: swap locks and try again
         else {
+          System.out.println("Using edge case 4");
           first.nodeLock.unlock();
           first = second;
           second = second.next;
+          second.nodeLock.lock();
           index++;
         }
       }
@@ -118,9 +126,10 @@ public class PriorityQueue {
     
     
     finally{
+        System.out.println("Added " + name + " at " + index);
     	  first.nodeLock.unlock();
-      second.nodeLock.unlock();
-      n.nodeLock.unlock();
+        second.nodeLock.unlock();
+        n.nodeLock.unlock();
     	}
     
     if(wakeDeq) {
@@ -161,6 +170,7 @@ public class PriorityQueue {
     second.nodeLock.unlock();
 
 	  }
+    System.out.println("Search(): " + found);
     return found ? index : -1;
   }
 
@@ -181,6 +191,7 @@ public class PriorityQueue {
       }
       //dequeue the first node's string
       result = head.next.data;
+      System.out.println("getFirst prio: " + head.next.priority);
       head = head.next;
 
       //Set a flag to see if there's space in queue
