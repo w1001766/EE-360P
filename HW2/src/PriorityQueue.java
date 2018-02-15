@@ -61,6 +61,8 @@ public class PriorityQueue {
     Node first = head;
     Node second = head.next;
     Node n = new Node(name, priority);
+    //Search if the name exists in the pqueue
+    if(search(name) != -1) return -1;
     first.nodeLock.lock();
     second.nodeLock.lock();
     n.nodeLock.lock();
@@ -69,8 +71,6 @@ public class PriorityQueue {
         full.await();
       }
 
-      //Search if the name exists in the pqueue
-      if(search(name) != -1) return -1;
 
       //Search for the place to add the new node.
 
@@ -102,7 +102,7 @@ public class PriorityQueue {
         }
         
         //Found the right place to insert (in the general case)
-        else if((second.priority <= n.priority) && (n.priority < first.priority)){
+        else if((second.priority < n.priority) && (n.priority <= first.priority)){
           System.out.println("Using edge case 3");
           first.next = n;
           n.next = second;
@@ -156,7 +156,8 @@ public class PriorityQueue {
     
     first.nodeLock.lock();
     second.nodeLock.lock();
-    while(!found && first.next == null){
+    while(!found && second.next != null){
+      System.out.println("Compare " + name + " to " + first.data);
       if(name.equals(first.data)){
         found = true;
       }
@@ -164,12 +165,12 @@ public class PriorityQueue {
         first.nodeLock.unlock();
         first = second;
         second = second.next;
+        second.nodeLock.lock();
         index++;
-    }
+      }
+	  }
     first.nodeLock.unlock();
     second.nodeLock.unlock();
-
-	  }
     System.out.println("Search(): " + found);
     return found ? index : -1;
   }

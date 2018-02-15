@@ -20,8 +20,8 @@ public class PriorityQueueTester {
 }
 class tester1 implements Runnable{
   PriorityQueue pq;
-  String[] names = new String[] {"Federico", "TImberlon", "Troy", "Julian", "Alex"};
-  int[] priorities = new int[] {1, 5, 6, 2, 5};
+  String[] names = new String[] {"Federico", "TImberlon", "Troy", "Julian", "Troy"};
+  int[] priorities = new int[] {1, 5, 6, 2, 7};
 
   public tester1(PriorityQueue pq) {
     this.pq = pq;
