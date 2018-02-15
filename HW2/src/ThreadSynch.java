@@ -1,53 +1,51 @@
 /*
  * EID's of group members
- * 
+ * dpv292
+ * am74874
  */
 import java.util.concurrent.Semaphore; // for implementation using Semaphores
 
 public class ThreadSynch {
-  private static final boolean debug = true;
-  Semaphore countingSemaphore = null;
-  Semaphore[] threadSemaphores = null;
-  Semaphore blockingSemaphore = null;
+  private final int totalThreads;
+  private int availableSeats;
+  private Semaphore waitingRoom;
+  private Semaphore entrance;
 
 	public ThreadSynch(int parties) {
-    // "Gate" semaphore
-    this.countingSemaphore = new Semaphore(parties);
-    this.blockingSemaphore = new Semaphore(1);
-    
-    threadSemaphores = new Semaphore[parties];
-    for (int i = 0; i < parties; ++i) {
-      this.threadSemaphores[i] = new Semaphore(1);
-    }
+    this.totalThreads = parties;
+    this.availableSeats = parties;
+    this.waitingRoom = new Semaphore(0);
 
+    // Ready to take first thread
+    this.entrance = new Semaphore(1);
 	}
 	
 	public int await() throws InterruptedException {
+    // Don't let multiple threads try and enter holding at once
+    // also avoid multiple access to decrement
+    try {
+      this.entrance.acquire();
+    } catch (InterruptedException ie) {
+      ie.printStackTrace();
+    }
+    --this.availableSeats;
+    this.entrance.release();
     
-    if (this.countingSemaphore.availablePermits() == 0) {
-      boolean allAwaited = true;
-      for (int i = 0; i < this.threadSemaphores.length; ++i) {
-        allAwaited |= this.threadSemaphores[i].availablePermits() == 0;
-      }
-      if (allAwaited) {
-        this.countingSemaphore.release();
-        this.blockingSemaphore.acquire();
-        for (int i = 0; i < this.threadSemaphores.length; ++i) {
-          this.threadSemaphores[i].release();
-        }
-        this.blockingSemaphore.release();
-        return 0;
-      }
-    } else {
-      int threadCount = this.countingSemaphore.availablePermits() - 1;
-      if (threadSemaphores[threadCount].availablePermits() != 0) {
-        System.out.println("Releasing thread: " + threadCount);
-        this.threadSemaphores[threadCount].acquire();
-        countingSemaphore.acquire();
-        return threadCount;
+    /********* Critical Section **********/
+    // Thread must wait for all threads to call await, i.e. all in waiting room
+    if (this.availableSeats > 0) {
+      try {
+        this.waitingRoom.acquire();
+      } catch (InterruptedException ie) {
+        ie.printStackTrace();
       }
     }
-
-    return -1;
-	}
+    // No more permits left means all threads have called await() so release all
+    else {
+      this.availableSeats = this.totalThreads;
+      this.waitingRoom.release(this.totalThreads -1); // Last thread not waiting
+    }
+   
+    return this.availableSeats;
+  }
 }
