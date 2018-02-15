@@ -1,6 +1,7 @@
 /*
  * EID's of group members
- * 
+ * dpv292
+ * am74874
  */
 
 public class MonitorThreadSynch {
