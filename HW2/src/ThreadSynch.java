@@ -10,7 +10,6 @@ public class ThreadSynch {
   private int availableSeats;
   private Semaphore waitingRoom;
   private Semaphore entrance;
-  private Semaphore mutex;
 
 	public ThreadSynch(int parties) {
     this.totalThreads = parties;
