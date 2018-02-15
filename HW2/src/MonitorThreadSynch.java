@@ -4,14 +4,27 @@
  */
 
 public class MonitorThreadSynch {
+  private int totalThreads;
+  private int availableSeats;
 	
 	public MonitorThreadSynch(int parties) {
+    totalThreads = parties;
+    availableSeats = parties;
 	}
 	
-	public int await() throws InterruptedException {
-           int index = 0;
-		
-          // you need to write this code
-	    return index;
+	public synchronized int await() throws InterruptedException {
+    // Hold all threads until they all call wait()
+		if (--availableSeats > 0) {
+      try {
+        wait();
+      } catch (InterruptedException ie) {
+        ie.printStackTrace();
+      }
+    // Awaken all held threads and reset counter
+    } else {
+      notifyAll();
+      this.availableSeats = this.totalThreads;
+    }
+	  return this.availableSeats;
 	}
 }

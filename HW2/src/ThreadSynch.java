@@ -6,13 +6,14 @@ import java.util.concurrent.Semaphore; // for implementation using Semaphores
 
 public class ThreadSynch {
   private final int totalThreads;
-  private int availablePermits;
+  private int availableSeats;
   private Semaphore waitingRoom;
   private Semaphore entrance;
+  private Semaphore mutex;
 
 	public ThreadSynch(int parties) {
     this.totalThreads = parties;
-    this.availablePermits = parties;
+    this.availableSeats = parties;
     this.waitingRoom = new Semaphore(0);
 
     // Ready to take first thread
@@ -21,17 +22,18 @@ public class ThreadSynch {
 	
 	public int await() throws InterruptedException {
     // Don't let multiple threads try and enter holding at once
+    // also avoid multiple access to decrement
     try {
       this.entrance.acquire();
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    --this.availablePermits;
+    --this.availableSeats;
     this.entrance.release();
     
     /********* Critical Section **********/
     // Thread must wait for all threads to call await, i.e. all in waiting room
-    if (this.availablePermits > 0) {
+    if (this.availableSeats > 0) {
       try {
         this.waitingRoom.acquire();
       } catch (InterruptedException ie) {
@@ -40,10 +42,10 @@ public class ThreadSynch {
     }
     // No more permits left means all threads have called await() so release all
     else {
-      this.availablePermits = this.totalThreads;
+      this.availableSeats = this.totalThreads;
       this.waitingRoom.release(this.totalThreads -1); // Last thread not waiting
     }
-
-    return this.availablePermits;
+   
+    return this.availableSeats;
   }
 }
