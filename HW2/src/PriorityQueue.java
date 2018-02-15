@@ -22,7 +22,7 @@ public class PriorityQueue {
         data = null;
         priority = -1;
         next = null;
-        nodeLock = null;
+        nodeLock = new ReentrantLock();
       }
       
       public Node(String name, int priority){
@@ -42,7 +42,8 @@ public class PriorityQueue {
     full = enq.newCondition();
     empty = deq.newCondition();
     head = new Node();
-    tail = head.next;
+    tail = new Node();
+    head.next = tail;
     size = new AtomicInteger(0);
     capacity = maxSize;
   }
@@ -203,5 +204,6 @@ public class PriorityQueue {
     }
     return result;
 	}
+  
 }
 
