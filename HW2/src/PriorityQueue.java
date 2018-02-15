@@ -1,4 +1,3 @@
-import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 
@@ -28,7 +27,7 @@ public class PriorityQueue {
       
       public Node(String name, int priority){
         data = name;
-        priority = priority;
+        this.priority = priority;
         next = null;
         nodeLock = new ReentrantLock();
       }
@@ -57,25 +56,23 @@ public class PriorityQueue {
     boolean wakeDeq = false;
     enq.lock();
     int index = 0;
+    boolean found = false;
+    Node first = head;
+    Node second = head.next;
+    Node n = new Node(name, priority);
+    first.nodeLock.lock();
+    second.nodeLock.lock();
+    n.nodeLock.lock();
     try{
       while(size.get() == capacity){
         full.await();
       }
 
-      Node n = new Node(name, priority);
-      
-
       //Search if the name exists in the pqueue
       if(search(name) == -1) return -1;
 
       //Search for the place to add the new node.
-      boolean found = false;
-      Node first = head;
-      Node second = head.next;
-      
-      first.nodeLock.lock();
-      second.nodeLock.lock();
-      n.nodeLock.lock();
+
       while(!found){
         //Edge case: inserting in an empty queue
         if(first == null && second == null){
@@ -85,14 +82,14 @@ public class PriorityQueue {
         }
         
         //Edge case: inserting at beginning of queue
-        if(first == null && (second.priority < n.priority)){
+        else if(first == null && (second.priority < n.priority)){
           first.next = n;
           n.next = second;
           found = true;
         }
 
         //Edge case: inserting at end of queue
-        if((first.priority > n.priority) && second == null){
+        else if((first.priority > n.priority) && second == null){
           first.next = n;
           n.next = second;
           found = true;
@@ -113,13 +110,29 @@ public class PriorityQueue {
           index++;
         }
       }
-      first.nodeLock.unlock();
+      if(size.getAndIncrement() == 0) wakeDeq = true;
+    }catch (InterruptedException ie) {
+        ie.printStackTrace();
+      }
+    
+    
+    finally{
+    	  first.nodeLock.unlock();
       second.nodeLock.unlock();
       n.nodeLock.unlock();
+    	}
+    
+    if(wakeDeq) {
+	    	deq.lock();
+	    	try {
+	    		empty.signalAll();
+	    	}
+	    	finally {
+	    		deq.unlock();
+	    	}
     }
-    finally{
-      return index;
-    }
+    
+    return index;
 	}
 
 	public int search(String name) {
