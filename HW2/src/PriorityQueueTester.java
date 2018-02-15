@@ -34,7 +34,7 @@ class tester1 implements Runnable{
         pq.add(names[i], priorities[i]);
       }
 
-      for (int i=0; i<5; ++i) {
+      for (int i=0; i<4; ++i) {
         System.out.println(pq.getFirst());
       }
     } catch (Exception e) {
