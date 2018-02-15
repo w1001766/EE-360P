@@ -1,7 +1,19 @@
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+import java.util.concurrent.atomic.*;
+
 public class PriorityQueue {
   
-  class Node {
+  private Node head;
+  private Node tail;
+  private int capacity;
+  private AtomicInteger size;
+  private Condition full; 
+  private Condition empty;
+  private ReentrantLock enq;
+  private ReentrantLock deq;
+
+  private class Node {
       public String data;
       public int priority;
       public Node next;
@@ -24,22 +36,13 @@ public class PriorityQueue {
 
   }
   
-  ReentrantLock enq;
-  ReentrantLock deq;
-  Condition full;
-  Condition empty;
-  Node head, tail;
-  AtomicInteger size;
-  int capacity;
-
-
 	public PriorityQueue(int maxSize) {
     // Creates a Priority queue with maximum allowed size as capacity
     enq = new ReentrantLock();
     deq = new ReentrantLock();
-    full = lock.newCondition();
-    empty = lock.newCondition();
-    head = new Node(null);
+    full = enq.newCondition();
+    empty = deq.newCondition();
+    head = new Node();
     tail = head.next;
     size = new AtomicInteger(0);
     capacity = maxSize;
@@ -53,6 +56,7 @@ public class PriorityQueue {
     
     boolean wakeDeq = false;
     enq.lock();
+    int index = 0;
     try{
       while(size.get() == capacity){
         full.await();
@@ -66,7 +70,6 @@ public class PriorityQueue {
 
       //Search for the place to add the new node.
       boolean found = false;
-      int index = 0;
       Node first = head;
       Node second = head.next;
       
@@ -143,8 +146,8 @@ public class PriorityQueue {
     first.nodeLock.unlock();
     second.nodeLock.unlock();
 
-    return found ? index : -1;
 	  }
+    return found ? index : -1;
   }
 
 	public String getFirst() {
@@ -156,10 +159,14 @@ public class PriorityQueue {
     try{
       while(size.get() == 0){
         //block the thread
-        empty.await();
+        try {
+          empty.await();
+        } catch (InterruptedException ie) {
+          ie.printStackTrace();
+        }
       }
       //dequeue the first node's string
-      result = head.next.data();
+      result = head.next.data;
       head = head.next;
 
       //Set a flag to see if there's space in queue
