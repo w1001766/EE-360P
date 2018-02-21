@@ -4,7 +4,7 @@ public class PriorityQueueTester {
   PriorityQueue pq;
 
   PriorityQueueTester() {
-    this.pq = new PriorityQueue(5);
+    this.pq = new PriorityQueue(3);
   }
 
 
@@ -31,12 +31,19 @@ class tester1 implements Runnable{
   public void run() {
     try {
       for (int i=0; i<5; ++i) {
+        System.out.println("adding: " + names[i]);
         pq.add(names[i], priorities[i]);
       }
 
-      for (int i=0; i<4; ++i) {
-        System.out.println(pq.getFirst());
-      }
+   //   for (int i=0; i<size2; ++i) {
+   //     System.out.println(pq.getFirst());
+   //   }
+      System.out.println(pq.getFirst());
+          System.out.println(pq.getFirst());
+System.out.println(pq.getFirst());
+System.out.println(pq.getFirst());
+System.out.println(pq.getFirst());
+
     } catch (Exception e) {
       e.printStackTrace();
     }

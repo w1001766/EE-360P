@@ -6,7 +6,7 @@ public class PriorityQueue {
   private Node head;
   private Node tail;
   private int capacity;
-  private AtomicInteger size;
+  public AtomicInteger size;
   private Condition full; 
   private Condition empty;
   private ReentrantLock enq;
@@ -77,7 +77,7 @@ public class PriorityQueue {
       while(!found){
         //Edge case: inserting in an empty queue
         if(first == head && second == tail){
-          System.out.println("Using edge case 0");
+          //System.out.println("Using edge case 0");
           first.next = n;
           n.next = second;
           found = true;
@@ -85,9 +85,9 @@ public class PriorityQueue {
         
         //Edge case: inserting at beginning of queue
         else if(first == head && (second.priority < n.priority)){
-          System.out.println("Using edge case 1");
-          System.out.println("name: " + second.data);
-          System.out.println("priority: " + second.priority);
+          //System.out.println("Using edge case 1");
+          //System.out.println("name: " + second.data);
+          //System.out.println("priority: " + second.priority);
           first.next = n;
           n.next = second;
           found = true;
@@ -95,7 +95,7 @@ public class PriorityQueue {
 
         //Edge case: inserting at end of queue
         else if((first.priority > n.priority) && second == tail){
-          System.out.println("Using edge case 2");
+          //System.out.println("Using edge case 2");
           first.next = n;
           n.next = second;
           found = true;
@@ -103,7 +103,7 @@ public class PriorityQueue {
         
         //Found the right place to insert (in the general case)
         else if((second.priority < n.priority) && (n.priority <= first.priority)){
-          System.out.println("Using edge case 3");
+          //System.out.println("Using edge case 3");
           first.next = n;
           n.next = second;
           found = true;
@@ -111,7 +111,7 @@ public class PriorityQueue {
         
         //Hand-over-hand method: swap locks and try again
         else {
-          System.out.println("Using edge case 4");
+          //System.out.println("Using edge case 4");
           first.nodeLock.unlock();
           first = second;
           second = second.next;
@@ -126,7 +126,7 @@ public class PriorityQueue {
     
     
     finally{
-        System.out.println("Added " + name + " at " + index);
+        //System.out.println("Added " + name + " at " + index);
     	  first.nodeLock.unlock();
         second.nodeLock.unlock();
         n.nodeLock.unlock();
@@ -157,7 +157,7 @@ public class PriorityQueue {
     first.nodeLock.lock();
     second.nodeLock.lock();
     while(!found && second.next != null){
-      System.out.println("Compare " + name + " to " + first.data);
+      //System.out.println("Compare " + name + " to " + first.data);
       if(name.equals(first.data)){
         found = true;
       }
@@ -171,7 +171,7 @@ public class PriorityQueue {
 	  }
     first.nodeLock.unlock();
     second.nodeLock.unlock();
-    System.out.println("Search(): " + found);
+    //System.out.println("Search(): " + found);
     return found ? index : -1;
   }
 
@@ -192,7 +192,7 @@ public class PriorityQueue {
       }
       //dequeue the first node's string
       result = head.next.data;
-      System.out.println("getFirst prio: " + head.next.priority);
+      //System.out.println("getFirst prio: " + head.next.priority);
       head = head.next;
 
       //Set a flag to see if there's space in queue
