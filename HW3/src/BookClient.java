@@ -20,36 +20,86 @@ public class BookClient {
     hostAddress = "localhost";
     tcpPort = 7000;// hardcoded -- must match the server's tcp port
     udpPort = 8000;// hardcoded -- must match the server's udp port
+    
+    String protocol = "U";
+
+    // Initializing UDP objects
+    DatagramPacket sPacket, rPacket;
+    byte[] rBuffer;
+
+    // Initializing TCP objects
+    Socket tcp;
+
 
     try {
         Scanner sc = new Scanner(new FileReader(commandFile));
-
+        InetAddress inet = InetAddress.getByName(hostAddress);
+        DatagramSocket datasocket = new DatagramSocket();
+        
         while(sc.hasNextLine()) {
           String cmd = sc.nextLine();
           String[] tokens = cmd.split(" ");
 
           if (tokens[0].equals("setmode")) {
             // TODO: set the mode of communication for sending commands to the server 
-            
+            if (tokens[1].equals("U")){
+              protocol = "U";
+            }
+            else if (tokens[1].equals("T")){
+              protocal = "T";
+            }
+
           }
           else if (tokens[0].equals("borrow")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-            
+            // borrow <student-name> <book-name>
+            // UDP
+            byte[] buffer = new byte[cmd.length()];
+            buffer = cmd.getBytes();
+            sPacket = new DatagramPacket(buffer, buffer.length, inet, udpPort);
+            datasocket.send(sPacket);
+            rPacket = new DatagramPacket(rbuffer, rbuffer.length);
+            datasocket.receive(rPacket);
+            String output = new String(rPacket.getData(), 0, rPacket.getLength());
+            System.out.println(output);
+
           } else if (tokens[0].equals("return")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-            
+            // return <record-id>
+            // UDP
+            byte[] buffer = new byte[cmd.length()];
+            buffer = cmd.getBytes();
+            sPacket = new DatagramPacket(buffer, buffer.length, inet, udpPort);
+            datasocket.send(sPacket);
+            rPacket = new DatagramPacket(rbuffer, rbuffer.length);
+            datasocket.receive(rPacket);
+            String output = new String(rPacket.getData(), 0, rPacket.getLength());
+            System.out.println(output);
+
           } else if (tokens[0].equals("inventory")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-            
+            // list <student-name>
+            // UDP
+            byte[] buffer = new byte[cmd.length()];
+            buffer = cmd.getBytes();
+            sPacket = new DatagramPacket(buffer, buffer.length, inet, udpPort);
+            datasocket.send(sPacket);
+            rPacket = new DatagramPacket(rbuffer, rbuffer.length);
+            datasocket.receive(rPacket);
+            String output = new String(rPacket.getData(), 0, rPacket.getLength());
+            System.out.println(output);
+
           } else if (tokens[0].equals("list")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-            
+            // inventory
+            // UDP
+            byte[] buffer = new byte[cmd.length()];
+            buffer = cmd.getBytes();
+            sPacket = new DatagramPacket(buffer, buffer.length, inet, udpPort);
+            datasocket.send(sPacket);
+            rPacket = new DatagramPacket(rbuffer, rbuffer.length);
+            datasocket.receive(rPacket);
+            String output = new String(rPacket.getData(), 0, rPacket.getLength());
+            System.out.println(output);
+
           } else if (tokens[0].equals("exit")) {
-            // TODO: send appropriate command to the server 
+            // exit (NO OUTPUT)
             
           } else {
             System.out.println("ERROR: No such command");
