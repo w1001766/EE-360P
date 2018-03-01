@@ -1,6 +1,8 @@
 import java.util.Scanner;
 import java.io.*;
 import java.util.*;
+import java.net.*;
+
 public class BookClient {
   public static void main (String[] args) {
     String hostAddress;
@@ -25,17 +27,33 @@ public class BookClient {
 
     // Initializing UDP objects
     DatagramPacket sPacket, rPacket;
-    byte[] rBuffer;
+    byte[] rbuffer = null;
 
-    // Initializing TCP objects
+    // TCP objects and methods
     Socket tcp;
-
-
+/*    
+    public String borrowBook (String student, String name){
+      return null;
+    }
+    public String returnBook (String id){
+      return null;
+    }
+    public String list (String name){
+      return null;
+    }
+    public String inventory (){
+      return null;
+    }
+    public void exit(){
+      return null;
+    }
+*/
     try {
-        Scanner sc = new Scanner(new FileReader(commandFile));
+        Scanner sc = new Scanner(System.in);    // change System.in to new FileReader(commandFile)
         InetAddress inet = InetAddress.getByName(hostAddress);
         DatagramSocket datasocket = new DatagramSocket();
-        
+//        tcp = new Socket(inet, tcpPort);
+
         while(sc.hasNextLine()) {
           String cmd = sc.nextLine();
           String[] tokens = cmd.split(" ");
@@ -46,21 +64,26 @@ public class BookClient {
               protocol = "U";
             }
             else if (tokens[1].equals("T")){
-              protocal = "T";
+              protocol = "T";
             }
 
           }
           else if (tokens[0].equals("borrow")) {
             // borrow <student-name> <book-name>
+            //TCP
+            if (protocol.equals("T")){
+            }
+            else{
             // UDP
-            byte[] buffer = new byte[cmd.length()];
-            buffer = cmd.getBytes();
-            sPacket = new DatagramPacket(buffer, buffer.length, inet, udpPort);
-            datasocket.send(sPacket);
-            rPacket = new DatagramPacket(rbuffer, rbuffer.length);
-            datasocket.receive(rPacket);
-            String output = new String(rPacket.getData(), 0, rPacket.getLength());
-            System.out.println(output);
+              byte[] buffer = new byte[cmd.length()];
+              buffer = cmd.getBytes();
+              sPacket = new DatagramPacket(buffer, buffer.length, inet, udpPort);
+              datasocket.send(sPacket);
+              rPacket = new DatagramPacket(rbuffer, rbuffer.length);
+              datasocket.receive(rPacket);
+              String output = new String(rPacket.getData(), 0, rPacket.getLength());
+              System.out.println(output);
+            }
 
           } else if (tokens[0].equals("return")) {
             // return <record-id>
@@ -100,13 +123,21 @@ public class BookClient {
 
           } else if (tokens[0].equals("exit")) {
             // exit (NO OUTPUT)
+            // Send info to server to close
+
+            //tcp.close();
+            datasocket.close();
+            //print outputs to a text file
             
+
+
           } else {
             System.out.println("ERROR: No such command");
           }
         }
-    } catch (FileNotFoundException e) {
-	e.printStackTrace();
+    }
+    catch (Exception e) {
+	    e.printStackTrace();
     }
   }
 }
