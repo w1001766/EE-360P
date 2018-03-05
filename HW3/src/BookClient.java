@@ -44,7 +44,7 @@ public class BookClient {
     Socket tcp;
 
     try {
-        Scanner sc = new Scanner(System.in);    // change System.in to new FileReader(commandFile)
+        Scanner sc = new Scanner(new FileReader(commandFile));    // change System.in to new FileReader(commandFile)
         InetAddress inet = InetAddress.getByName(hostAddress);
         DatagramSocket datasocket = new DatagramSocket();
 //        tcp = new Socket(inet, tcpPort);
@@ -110,7 +110,7 @@ public class BookClient {
             // exit (NO OUTPUT)
             // Send info to server to close
       	    // TCP
-            sc.close();
+            // sc.close();
       	    if (protocol.equals("T")){
       	    }
       	    else{
