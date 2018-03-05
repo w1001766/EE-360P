@@ -173,10 +173,9 @@ public class BookServer {
         String name = split[0].split(" ")[1];
         System.out.println("Student name: " + name + ", book title: " + book);
         int recordId = borrowBook(name, book);
-        if(recordId == -1) output = "Request Failed - We do not have this book";"
+        if(recordId == -1) output = "Request Failed - We do not have this book";
         else if (recordId == 0) output = "Request Failed - Book not available";
-
-        else output = "You request has been approved, " + recordId + " " + name + " \"" + book + "\"";
+        else output = "Your request has been approved, " + recordId + " " + name + " \"" + book + "\"";
         System.out.println(output);
         if (protocol.equals("T")){
         }
