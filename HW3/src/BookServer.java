@@ -5,9 +5,9 @@ import java.util.*;
 public class BookServer {
   static int recordCount = 0;
   static Hashtable<Integer, String> recordBook = new Hashtable<Integer, String>();       // Record(id, studentName, bookName)
-  static Hashtable<String, Integer> inventory = new Hashtable<String, Integer>();        // bookName, count
+  // static Hashtable<String, Integer> inventory = new Hashtable<String, Integer>();        // bookName, count
   static Hashtable<String, ArrayList<Integer>> readingList = new Hashtable<String, ArrayList<Integer>>();        // studentName, id[]
-    
+  static Map<String, Integer> inventory = Collections.synchronizedMap(new LinkedHashMap<>());  
   public BookServer(){
     recordCount = 0;
     recordBook = new Hashtable<>();
