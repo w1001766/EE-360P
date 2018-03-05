@@ -2,19 +2,44 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class BookServer {
+public class BookServer extends Thread {
   static int recordCount = 0;
   static Hashtable<Integer, String> recordBook = new Hashtable<Integer, String>();       // Record(id, studentName, bookName)
   static Hashtable<String, Integer> inventory = new Hashtable<String, Integer>();        // bookName, count
   static Hashtable<String, ArrayList<Integer>> readingList = new Hashtable<String, ArrayList<Integer>>();        // studentName, id[]
+
+
+  private class TcpServer extends Thread {
+    private Socket clientSocket;
+
+    public TcpServer(Socket clientSocket) {
+      this.clientSocket = clientSocket;
+      start();
+    }
+
+    public void run() {
+      // Do stuff
+    }
+  }
+  
     
-  public BookServer(){
-    recordCount = 0;
-    recordBook = new Hashtable<>();
-    inventory = new Hashtable<>();
-    readingList = new Hashtable<>();
+    
+  public BookServer() throws Exception {
+    start();
   }
 
+  public void run() {
+    ServerSocket serverSocket = null;
+    
+    try {
+      serverSocket = new ServerSocket(7070);
+      while (true) {
+        new TcpServer(serverSocket.accept());
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
   /* ------------------------------------------------------------------------------------------------ */
   /* @@@@@@@@@@ SERVER METHODS @@@@@@@@@@ */
@@ -99,12 +124,12 @@ public class BookServer {
   public static void responseUDP(InetAddress ip, int port, String output, DatagramSocket serverSocket) {
     System.out.println("Sending response: " + output);
     byte[] sendData = output.getBytes();
-      DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ip, port);
-      try {
-		serverSocket.send(sendPacket);
-	} catch (IOException e) {
-		e.printStackTrace();
-	}
+    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ip, port);
+    try {
+      serverSocket.send(sendPacket);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
   
   public static void main (String[] args) throws Exception {
@@ -230,8 +255,7 @@ public class BookServer {
         //System.exit(0);
         //break;
 
-      }
-      else{
+      } else {
         System.out.println("Something fucked up bro, lmao");
       }
       // TCP Method
