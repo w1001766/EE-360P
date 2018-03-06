@@ -27,6 +27,7 @@ public class BookClient {
     System.out.println("RESPONSE RECEIVED!");
     //System.out.println(serverResponse);
     if ((serverResponse = response.readLine().trim()) != null) {
+      serverResponse = serverResponse.replaceAll("}", "\n");
       System.out.println(serverResponse);
     }
     System.out.println("TCP request finished bitch");

@@ -66,12 +66,11 @@ public class BookServer extends Thread {
                                       "Your request has been approved, " + recordId +
                                       " " + name + " \"" + book + "\"";
             System.out.println(output);
+            output = output.replaceAll("\n", "}");
 
             // Send response to client
             System.out.println("Sending response: " + output);
-            for (String s : output.split("\n")) {
-              responseMsg.println(s);
-            }
+            responseMsg.println(output);
           }
           
           // Book is requested to be returned
@@ -84,9 +83,8 @@ public class BookServer extends Thread {
             
             // Send response to client
             System.out.println("Sending response: " + output);
-            for (String s : output.split("\n")) {
-              responseMsg.println(s);
-            }
+            output = output.replaceAll("\n", "}");
+            responseMsg.println(output);
           }
           
           // Inventory list
@@ -96,9 +94,8 @@ public class BookServer extends Thread {
 
             // Send response to client
             System.out.println("Sending response: " + output);
-            for (String s : output.split("\n")) {
-              responseMsg.println(s);
-            }
+            output = output.replaceAll("\n", "}");
+            responseMsg.println(output);
           }
           
           // Student list request
@@ -109,9 +106,8 @@ public class BookServer extends Thread {
 
             // Send response to client
             System.out.println("Sending response: " + output);
-            for (String s : output.split("\n")) {
-              responseMsg.println(s);
-            }
+            output = output.replaceAll("\n", "}");
+            responseMsg.println(output);
           }
           
           // Update or write file, client leaving
