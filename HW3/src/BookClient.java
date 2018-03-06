@@ -19,11 +19,15 @@ public class BookClient {
   public static void requestTCP(String cmd, Socket tcpSocket) throws Exception {
     PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
     BufferedReader response = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream()));
-
+    System.out.println("Sending command to TCP SocketServer...");
     request.println(cmd);
     String serverResponse;
-    while ((serverResponse = response.readLine()) == null || serverResponse == "") {}
+    System.out.println("Waiting for response...");
+    while ((serverResponse = response.readLine()) == null || serverResponse == "") {System.out.println("waiting...");}
+    System.out.println("RESPONSE RECEIVED!");
     System.out.println(serverResponse);
+    request.close();
+    response.close();
   }
   
   public static void main (String[] args) {
@@ -54,7 +58,7 @@ public class BookClient {
         Scanner sc = new Scanner(System.in);    // change System.in to new FileReader(commandFile)
         InetAddress inet = InetAddress.getByName(hostAddress);
         DatagramSocket datasocket = new DatagramSocket();
-        Socket tcpSocket = new Socket(inet, tcpPort);
+        Socket tcpSocket = new Socket(hostAddress, tcpPort);
 
         while(sc.hasNextLine()) {
           String cmd = sc.nextLine();
@@ -77,6 +81,7 @@ public class BookClient {
             // borrow <student-name> <book-name>
             //TCP
             if (protocol.equals("T")){
+              requestTCP(cmd, tcpSocket);
             }
             else{
             	  requestUDP(cmd, datasocket, inet, udpPort);
@@ -87,6 +92,7 @@ public class BookClient {
             // return <record-id>
         	    // TCP
         	    if (protocol.equals("T")){
+              requestTCP(cmd, tcpSocket);
         	    }
         	    else{
           	  requestUDP(cmd, datasocket, inet, udpPort);
@@ -97,6 +103,7 @@ public class BookClient {
             // list <student-name>
       	    // TCP
       	    if (protocol.equals("T")){
+              requestTCP(cmd, tcpSocket);
       	    }
       	    else{
       	      requestUDP(cmd, datasocket, inet, udpPort);
@@ -107,6 +114,7 @@ public class BookClient {
             // inventory
       	    // TCP
       	    if (protocol.equals("T")){
+              requestTCP(cmd, tcpSocket);
       	    }
       	    else{
       	      requestUDP(cmd, datasocket, inet, udpPort);
@@ -117,19 +125,20 @@ public class BookClient {
             // exit (NO OUTPUT)
             // Send info to server to close
       	    // TCP
-            // sc.close();
-      	    if (protocol.equals("T")){
-      	    }
-      	    else{
-	            byte[] buffer = new byte[cmd.length()];
-              buffer = cmd.getBytes();
-              sPacket = new DatagramPacket(buffer, cmd.length(), inet, udpPort);
-              datasocket.send(sPacket);
-              datasocket.close(); 
-              System.exit(0);
-              break;
-      	    }
-            //tcp.close();
+            sc.nextLine();
+            sc.close();
+            requestTCP(cmd, tcpSocket);
+            PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
+            System.out.println("Sending command to TCP SocketServer...");
+            request.println(cmd);
+            byte[] buffer = new byte[cmd.length()];
+            buffer = cmd.getBytes();
+            sPacket = new DatagramPacket(buffer, cmd.length(), inet, udpPort);
+            datasocket.send(sPacket);
+            datasocket.close(); 
+            request.close();
+            System.exit(0);
+            break;
           } else {
             System.out.println("ERROR: No such command");
           }

@@ -33,7 +33,8 @@ public class BookServer extends Thread {
       
       // Attempt to execute client request
       try {
-        while ((inputLn = clientRequest.readLine()) != null) {
+        boolean exit = false;
+        while ((inputLn = clientRequest.readLine()) != null || !exit) {
           String[] tokens = inputLn.split(" ");
           String output;
           
@@ -60,7 +61,7 @@ public class BookServer extends Thread {
             output = recordId == -1 ? "Request Failed - We do not have this book" :
                      recordId ==  0 ? "Request Failed - Book not available" : 
                                       "Your request has been approved, " + recordId +
-                                      " " + name + "\"" + book + "\"";
+                                      " " + name + " \"" + book + "\"";
             System.out.println(output);
 
             // Send response to client
@@ -106,6 +107,7 @@ public class BookServer extends Thread {
           else if (tokens[0].trim().equals("exit")) {
             System.out.println("EXITING...");
             exit();
+            exit = true;
           }
 
           else {
@@ -125,9 +127,12 @@ public class BookServer extends Thread {
 
   public void run() {
     try {
+      System.out.println("Running TCP; opening server socket...");
       serverSocket = new ServerSocket(7070);
-      while (true) {
-        new TcpServer(serverSocket.accept());
+      Socket s;
+      while ((s = serverSocket.accept()) != null) {
+        System.out.println("Creating TcpServer");
+        new TcpServer(s);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -270,9 +275,7 @@ public class BookServer extends Thread {
 
 
     DatagramSocket serverSocket = new DatagramSocket(udpPort);
-    
-    ServerSocket listener = new ServerSocket(tcpPort);
-    Socket s = new Socket();
+    BookServer bs = new BookServer();    
     
     System.out.println("Establishing connection and creating sockets...");
     String protocol = "U";
