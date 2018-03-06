@@ -15,6 +15,16 @@ public class BookClient {
     String output = new String(rPacket.getData(), 0, rPacket.getLength());
     System.out.println(output);
   }
+
+  public static void requestTCP(String cmd, Socket tcpSocket) throws Exception {
+    PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
+    BufferedReader response = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream()));
+
+    request.println(cmd);
+    String serverResponse;
+    while ((serverResponse = response.readLine()) == null || serverResponse == "") {}
+    System.out.println(serverResponse);
+  }
   
   public static void main (String[] args) {
     String hostAddress;
@@ -40,14 +50,11 @@ public class BookClient {
     // Initializing UDP objects
     DatagramPacket sPacket, rPacket;
 
-    // TCP objects and methods
-    Socket tcp;
-
     try {
         Scanner sc = new Scanner(new FileReader(commandFile));    // change System.in to new FileReader(commandFile)
         InetAddress inet = InetAddress.getByName(hostAddress);
         DatagramSocket datasocket = new DatagramSocket();
-//        tcp = new Socket(inet, tcpPort);
+        Socket tcpSocket = new Socket(inet, tcpPort);
 
         while(sc.hasNextLine()) {
           String cmd = sc.nextLine();
