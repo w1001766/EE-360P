@@ -51,7 +51,7 @@ public class BookClient {
     DatagramPacket sPacket, rPacket;
 
     try {
-        Scanner sc = new Scanner(new FileReader(commandFile));    // change System.in to new FileReader(commandFile)
+        Scanner sc = new Scanner(System.in);    // change System.in to new FileReader(commandFile)
         InetAddress inet = InetAddress.getByName(hostAddress);
         DatagramSocket datasocket = new DatagramSocket();
         Socket tcpSocket = new Socket(inet, tcpPort);
