@@ -30,7 +30,6 @@ public class BookClient {
       serverResponse = serverResponse.replaceAll("}", "\n");
       System.out.println(serverResponse);
     }
-    System.out.println("TCP request finished bitch");
     /*
     do {
       System.out.println(serverResponse=="");
@@ -63,7 +62,7 @@ public class BookClient {
     DatagramPacket sPacket, rPacket;
 
     try {
-        Scanner sc = new Scanner(System.in);    // change System.in to new FileReader(commandFile)
+        Scanner sc = new Scanner(new FileReader(commandFile));    // change System.in to new FileReader(commandFile)
         InetAddress inet = InetAddress.getByName(hostAddress);
         DatagramSocket datasocket = new DatagramSocket();
         Socket tcpSocket = new Socket(hostAddress, tcpPort);
@@ -76,11 +75,9 @@ public class BookClient {
           if (tokens[0].equals("setmode")) {
             // TODO: set the mode of communication for sending commands to the server 
             if (tokens[1].equals("U")){
-              System.out.println("Switching to UDP");
               protocol = "U";
             }
             else if (tokens[1].equals("T")){
-              System.out.println("Switch to TCP");
               protocol = "T";
             }
           }
@@ -135,7 +132,6 @@ public class BookClient {
       	    // TCP
             
             PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
-            System.out.println("Sending exit command to TCP SocketServer...");
             request.println(cmd);
             request.close();
 

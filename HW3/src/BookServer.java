@@ -35,7 +35,7 @@ public class BookServer extends Thread {
       try {
         boolean exit = false;
         while (true) {
-          while ((inputLn = clientRequest.readLine()) == null) {System.out.println("Waiting for TCP input");}
+          while ((inputLn = clientRequest.readLine()) == null) {}
           System.out.println("TCP input received!");
           System.out.println("inputLn: " + inputLn);
           String[] tokens = inputLn.split(" ");
