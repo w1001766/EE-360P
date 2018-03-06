@@ -317,7 +317,7 @@ public class BookServer extends Thread {
         // return <record-id>
     	  System.out.println("Return processing");
         int id = Integer.parseInt(tokens[1].trim());
-        if(returnBook(id)) output = tokens[1] + " is returned";
+        if(returnBook(id)) output = Integer.toString(id) + " is returned";
         else output = tokens[1] + " not found, no such borrow record";
         
         if (protocol.equals("T")){
