@@ -8,6 +8,7 @@ public class BookServer extends Thread {
   static Hashtable<String, Integer> inventory = new Hashtable<String, Integer>();        // bookName, count
   static Hashtable<String, ArrayList<Integer>> readingList = new Hashtable<String, ArrayList<Integer>>();        // studentName, id[]
 
+  private ServerSocket serverSocket = null;
 
   private class TcpServer extends Thread {
     private Socket clientSocket;
@@ -18,19 +19,111 @@ public class BookServer extends Thread {
     }
 
     public void run() {
-      // Do stuff
+      BufferedReader clientRequest = null;
+      PrintWriter  responseMsg = null;
+
+      // Initialize read and writers for client
+      try {
+        clientRequest = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        responseMsg = new PrintWriter(clientSocket.getOutputStream(), true);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      String inputLn;
+      
+      // Attempt to execute client request
+      try {
+        while ((inputLn = clientRequest.readLine()) != null) {
+          String[] tokens = inputLn.split(" ");
+          String output;
+          
+          // Set UDP or TCP mode
+          if (tokens[0].equals("setmode")) {
+            if (tokens[1].equals("U")) {
+
+            } else if (tokens[1].equals("T")) {
+
+            }
+          }
+          
+          // Book is requested to be borrowed
+          else if (tokens[0].equals("borrow")) {
+            // Parse book to borrow and requesting student
+            System.out.println("Borrow processing");
+            String[] split = inputLn.split("\"");
+            String book = split[1];
+            String name = split[0].split(" ")[1];
+            System.out.println("Student name: " + name + ", book title: " + book);
+
+            // Borrow success? 
+            int recordId = borrowBook(name, book);
+            output = recordId == -1 ? "Request Failed - We do not have this book" :
+                     recordId ==  0 ? "Request Failed - Book not available" : 
+                                      "Your request has been approved, " + recordId +
+                                      " " + name + "\"" + book + "\"";
+            System.out.println(output);
+
+            // Send response to client
+            System.out.println("Sending response: " + output);
+            responseMsg.println(output);
+          }
+          
+          // Book is requested to be returned
+          else if (tokens[0].equals("return")) {
+            // Can the book be returned?
+            System.out.println("Return processing");
+            int id = Integer.parseInt(tokens[1].trim());
+            output = returnBook(id) ? tokens[1] + " is returned" :
+                                                  " not found, no such borrow record";
+            
+            // Send response to client
+            System.out.println("Sending response: " + output);
+            responseMsg.println(output);
+          }
+          
+          // Inventory list
+          else if (tokens[0].trim().equals("inventory")) {
+            System.out.println("Inventory request processing");
+            output = listInventory();
+
+            // Send response to client
+            System.out.println("Sending response: " + output);
+            responseMsg.println(output);
+          }
+          
+          // Student list request
+          else if (tokens[0].equals("list")) {
+            System.out.println("Student list request processing");
+            output = list(tokens[1].trim());
+            output = output != null ? output : "No record found for " + tokens[1];
+
+            // Send response to client
+            System.out.println("Sending response: " + output);
+            responseMsg.println(output);
+          }
+          
+          // Update or write file, client leaving
+          else if (tokens[0].trim().equals("exit")) {
+            System.out.println("EXITING...");
+            exit();
+          }
+
+          else {
+            System.out.println("lol fuck");
+          }
+
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
-  
-    
     
   public BookServer() throws Exception {
     start();
   }
 
   public void run() {
-    ServerSocket serverSocket = null;
-    
     try {
       serverSocket = new ServerSocket(7070);
       while (true) {
@@ -249,30 +342,12 @@ public class BookServer extends Thread {
       
       else if (tokens[0].trim().equals("exit")) {
     	  System.out.println("EXITING...");
-        // exit (NO OUTPUT)
-        // Send info to server to close
     	  exit();
-        //System.exit(0);
-        //break;
-
-      } else {
+      } 
+      
+      else {
         System.out.println("Something fucked up bro, lmao");
       }
-      // TCP Method
-    /*
-    try{
-
-      while((s = listener.accept()) != null){
-        BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream());
-        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-        String inLine, outLine;
-        inLine = in.readLine();
-        // Parse through data string and perform actions
-        
-      }
-    }
-    catch(Exception e) {e.printStackTrace();}
-  */
     }
   }
 }
