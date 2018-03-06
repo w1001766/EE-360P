@@ -4,7 +4,7 @@ import java.util.*;
 
 public class BookServer {
   static int recordCount = 0;
-  static Hashtable<Integer, String> recordBook = new Hashtable<Integer, String>();       // Record(id, studentName, bookName)
+  static Hashtable<Integer, String[]> recordBook = new Hashtable<Integer, String[]>();       // Recordid, [studentName, bookName]
   // static Hashtable<String, Integer> inventory = new Hashtable<String, Integer>();        // bookName, count
   static Hashtable<String, ArrayList<Integer>> readingList = new Hashtable<String, ArrayList<Integer>>();        // studentName, id[]
   static Map<String, Integer> inventory = Collections.synchronizedMap(new LinkedHashMap<>());  
@@ -29,8 +29,9 @@ public class BookServer {
       count -= 1;
       inventory.put(book, count);
       recordCount += 1;
-      recordBook.put(recordCount, book);    // Add checkout to record book
-                                            // Add to student reading list
+      String[] info = {name, book};
+      recordBook.put(recordCount, info);            // Add checkout to record book
+                                                    // Add to student reading list
       ArrayList<Integer> studentList; 
       if (!readingList.containsKey(name))          // Create new entry if one doesn't exist
         studentList = new ArrayList<Integer>();
@@ -50,10 +51,20 @@ public class BookServer {
   public static synchronized boolean returnBook(int recordId) {
     if(!recordBook.containsKey(recordId)) return false;
     else{
-      String bookName = recordBook.get(recordId);
-      int count = inventory.get(bookName) + 1;
-      inventory.put(bookName, count);
-      
+      String[] info = recordBook.get(recordId);
+      String name = info[0];
+      String book = info[1];
+      int count = inventory.get(book) + 1;
+      inventory.put(book, count);
+      // Remove id from student's arrayList
+      ArrayList<Integer> studentRecord = readingList.get(name);
+      if(studentRecord.size() == 1){
+        readingList.remove(name);
+      }
+      else{
+        studentRecord.remove(recordId);
+        readingList.put(name, studentRecord);
+      }
       return true;
     }
   }
@@ -67,7 +78,7 @@ public class BookServer {
     StringBuilder result = new StringBuilder();
     ArrayList<Integer> studentRecord = readingList.get(name);
     for (int i = 0; i < studentRecord.size(); i++){
-      String book = recordBook.get(studentRecord.get(i));
+      String book = recordBook.get(studentRecord.get(i))[1];
       System.out.println("Book: " + book + ", recordID = " + studentRecord.get(i));
       result.append(Integer.toString(studentRecord.get(i)) + " \"" + book + "\"\n");
     }
