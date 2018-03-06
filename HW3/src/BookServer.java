@@ -34,7 +34,9 @@ public class BookServer extends Thread {
       // Attempt to execute client request
       try {
         boolean exit = false;
-        while ((inputLn = clientRequest.readLine()) != null || !exit) {
+        while (true) {
+          while ((inputLn = clientRequest.readLine()) == null) {}
+          System.out.println("inputLn: " + inputLn);
           String[] tokens = inputLn.split(" ");
           String output;
           
@@ -108,6 +110,7 @@ public class BookServer extends Thread {
             System.out.println("EXITING...");
             exit();
             exit = true;
+            break;
           }
 
           else {

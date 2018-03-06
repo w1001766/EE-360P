@@ -95,7 +95,7 @@ public class BookClient {
               requestTCP(cmd, tcpSocket);
         	    }
         	    else{
-          	  requestUDP(cmd, datasocket, inet, udpPort);
+                requestUDP(cmd, datasocket, inet, udpPort);
         	    }
           }
           
@@ -127,16 +127,17 @@ public class BookClient {
       	    // TCP
             sc.nextLine();
             sc.close();
-            requestTCP(cmd, tcpSocket);
+
             PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
-            System.out.println("Sending command to TCP SocketServer...");
+            System.out.println("Sending exit command to TCP SocketServer...");
             request.println(cmd);
+            request.close();
+
             byte[] buffer = new byte[cmd.length()];
             buffer = cmd.getBytes();
             sPacket = new DatagramPacket(buffer, cmd.length(), inet, udpPort);
             datasocket.send(sPacket);
             datasocket.close(); 
-            request.close();
             System.exit(0);
             break;
           } else {
