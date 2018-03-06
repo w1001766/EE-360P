@@ -36,8 +36,6 @@ public class BookServer extends Thread {
         boolean exit = false;
         while (true) {
           while ((inputLn = clientRequest.readLine()) == null) {}
-          System.out.println("TCP input received!");
-          System.out.println("inputLn: " + inputLn);
           String[] tokens = inputLn.split(" ");
           String output;
           
@@ -53,11 +51,9 @@ public class BookServer extends Thread {
           // Book is requested to be borrowed
           else if (tokens[0].equals("borrow")) {
             // Parse book to borrow and requesting student
-            System.out.println("Borrow processing");
             String[] split = inputLn.split("\"");
             String book = split[1];
             String name = split[0].split(" ")[1];
-            System.out.println("Student name: " + name + ", book title: " + book);
 
             // Borrow success? 
             int recordId = borrowBook(name, book);
@@ -65,61 +61,51 @@ public class BookServer extends Thread {
                      recordId ==  0 ? "Request Failed - Book not available" : 
                                       "Your request has been approved, " + recordId +
                                       " " + name + " \"" + book + "\"";
-            System.out.println(output);
             output = output.replaceAll("\n", "}");
 
             // Send response to client
-            System.out.println("Sending response: " + output);
             responseMsg.println(output);
           }
           
           // Book is requested to be returned
           else if (tokens[0].equals("return")) {
             // Can the book be returned?
-            System.out.println("Return processing");
             int id = Integer.parseInt(tokens[1].trim());
             output = returnBook(id) ? tokens[1] + " is returned" :
                                                   " not found, no such borrow record";
             
             // Send response to client
-            System.out.println("Sending response: " + output);
             output = output.replaceAll("\n", "}");
             responseMsg.println(output);
           }
           
           // Inventory list
           else if (tokens[0].trim().equals("inventory")) {
-            System.out.println("Inventory request processing");
             output = listInventory();
 
             // Send response to client
-            System.out.println("Sending response: " + output);
             output = output.replaceAll("\n", "}");
             responseMsg.println(output);
           }
           
           // Student list request
           else if (tokens[0].equals("list")) {
-            System.out.println("Student list request processing");
             output = list(tokens[1].trim());
             output = output != null ? output : "No record found for " + tokens[1];
 
             // Send response to client
-            System.out.println("Sending response: " + output);
             output = output.replaceAll("\n", "}");
             responseMsg.println(output);
           }
           
           // Update or write file, client leaving
           else if (tokens[0].trim().equals("exit")) {
-            System.out.println("EXITING...");
             exit();
             exit = true;
             break;
           }
 
           else {
-            System.out.println("lol fuck");
           }
 
         }

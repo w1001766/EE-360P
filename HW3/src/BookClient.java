@@ -4,7 +4,7 @@ import java.util.*;
 import java.net.*;
 
 public class BookClient {
-  public static void requestUDP(String cmd, DatagramSocket datasocket, InetAddress inet, int port) throws IOException {
+  public static void requestUDP(String cmd, DatagramSocket datasocket, InetAddress inet, int port, PrintWriter pwriter) throws IOException {
 	  byte[] buffer = new byte[cmd.length()];
     byte[] rbuffer = new byte[4096];
     buffer = cmd.getBytes();
@@ -14,21 +14,20 @@ public class BookClient {
     datasocket.receive(rPacket);
     String output = new String(rPacket.getData(), 0, rPacket.getLength());
     System.out.println(output);
+    pwriter.println(output);
   }
 
-  public static void requestTCP(String cmd, Socket tcpSocket) throws Exception {
+  public static void requestTCP(String cmd, Socket tcpSocket, PrintWriter pwriter) throws Exception {
     PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
     BufferedReader response = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream()));
-    System.out.println("Sending command to TCP SocketServer...");
     request.println(cmd);
     String serverResponse;
-    System.out.println("Waiting for response...");
     //while ((serverResponse = response.readLine()) == null || serverResponse == "") {System.out.println("waiting...");}
-    System.out.println("RESPONSE RECEIVED!");
     //System.out.println(serverResponse);
     if ((serverResponse = response.readLine().trim()) != null) {
       serverResponse = serverResponse.replaceAll("}", "\n");
       System.out.println(serverResponse);
+      pwriter.println(serverResponse);
     }
     /*
     do {
@@ -37,11 +36,19 @@ public class BookClient {
     } while ((serverResponse = response.readLine()) != null && serverResponse != "");*/
   }
   
-  public static void main (String[] args) {
+  public static void main (String[] args) throws Exception {
     String hostAddress;
     int tcpPort;
     int udpPort;
-    int clientId;
+    String clientId = args[1];
+
+    String fileName   = "out_" + clientId + ".txt";
+    String fileOutput = "";
+    
+    File outputFile = new File(fileName);
+    FileWriter fwriter = new FileWriter(outputFile);
+    PrintWriter pwriter = new PrintWriter(fwriter, true);
+
 
     if (args.length != 2) {
       System.out.println("ERROR: Provide 2 arguments: commandFile, clientId");
@@ -51,7 +58,6 @@ public class BookClient {
     }
 
     String commandFile = args[0];
-    clientId = Integer.parseInt(args[1]);
     hostAddress = "localhost";
     tcpPort = 7070;// hardcoded -- must match the server's tcp port
     udpPort = 8080;// hardcoded -- must match the server's udp port
@@ -86,10 +92,10 @@ public class BookClient {
             // borrow <student-name> <book-name>
             //TCP
             if (protocol.equals("T")){
-              requestTCP(cmd, tcpSocket);
+              requestTCP(cmd, tcpSocket, pwriter);
             }
             else{
-            	  requestUDP(cmd, datasocket, inet, udpPort);
+            	  requestUDP(cmd, datasocket, inet, udpPort, pwriter);
             }
           }
           
@@ -97,10 +103,10 @@ public class BookClient {
             // return <record-id>
         	    // TCP
         	    if (protocol.equals("T")){
-              requestTCP(cmd, tcpSocket);
+              requestTCP(cmd, tcpSocket, pwriter);
         	    }
         	    else{
-                requestUDP(cmd, datasocket, inet, udpPort);
+                requestUDP(cmd, datasocket, inet, udpPort, pwriter);
         	    }
           }
           
@@ -108,10 +114,10 @@ public class BookClient {
             // list <student-name>
       	    // TCP
       	    if (protocol.equals("T")){
-              requestTCP(cmd, tcpSocket);
+              requestTCP(cmd, tcpSocket, pwriter);
       	    }
       	    else{
-      	      requestUDP(cmd, datasocket, inet, udpPort);
+      	      requestUDP(cmd, datasocket, inet, udpPort, pwriter);
       	    }
           }
           
@@ -119,10 +125,10 @@ public class BookClient {
             // inventory
       	    // TCP
       	    if (protocol.equals("T")){
-              requestTCP(cmd, tcpSocket);
+              requestTCP(cmd, tcpSocket, pwriter);
       	    }
       	    else{
-      	      requestUDP(cmd, datasocket, inet, udpPort);
+      	      requestUDP(cmd, datasocket, inet, udpPort, pwriter);
       	    }
           }
           
@@ -142,6 +148,8 @@ public class BookClient {
             datasocket.close(); 
             sc.close();
             System.exit(0);
+            fwriter.close();
+            pwriter.close();
             break;
           } else {
             System.out.println("ERROR: No such command");
