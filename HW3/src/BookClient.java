@@ -23,11 +23,18 @@ public class BookClient {
     request.println(cmd);
     String serverResponse;
     System.out.println("Waiting for response...");
-    while ((serverResponse = response.readLine()) == null || serverResponse == "") {System.out.println("waiting...");}
+    //while ((serverResponse = response.readLine()) == null || serverResponse == "") {System.out.println("waiting...");}
     System.out.println("RESPONSE RECEIVED!");
-    System.out.println(serverResponse);
-    request.close();
-    response.close();
+    //System.out.println(serverResponse);
+    if ((serverResponse = response.readLine().trim()) != null) {
+      System.out.println(serverResponse);
+    }
+    System.out.println("TCP request finished bitch");
+    /*
+    do {
+      System.out.println(serverResponse=="");
+      System.out.println(serverResponse);
+    } while ((serverResponse = response.readLine()) != null && serverResponse != "");*/
   }
   
   public static void main (String[] args) {
@@ -121,13 +128,11 @@ public class BookClient {
       	    }
           }
           
-          else if (cmd.trim().equals("exit")) {
+          else if (tokens[0].equals("exit")) {
             // exit (NO OUTPUT)
             // Send info to server to close
       	    // TCP
-            sc.nextLine();
-            sc.close();
-
+            
             PrintWriter request = new PrintWriter(tcpSocket.getOutputStream(), true);
             System.out.println("Sending exit command to TCP SocketServer...");
             request.println(cmd);
@@ -138,6 +143,7 @@ public class BookClient {
             sPacket = new DatagramPacket(buffer, cmd.length(), inet, udpPort);
             datasocket.send(sPacket);
             datasocket.close(); 
+            sc.close();
             System.exit(0);
             break;
           } else {

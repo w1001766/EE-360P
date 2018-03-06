@@ -35,7 +35,8 @@ public class BookServer extends Thread {
       try {
         boolean exit = false;
         while (true) {
-          while ((inputLn = clientRequest.readLine()) == null) {}
+          while ((inputLn = clientRequest.readLine()) == null) {System.out.println("Waiting for TCP input");}
+          System.out.println("TCP input received!");
           System.out.println("inputLn: " + inputLn);
           String[] tokens = inputLn.split(" ");
           String output;
@@ -68,7 +69,9 @@ public class BookServer extends Thread {
 
             // Send response to client
             System.out.println("Sending response: " + output);
-            responseMsg.println(output);
+            for (String s : output.split("\n")) {
+              responseMsg.println(s);
+            }
           }
           
           // Book is requested to be returned
@@ -81,7 +84,9 @@ public class BookServer extends Thread {
             
             // Send response to client
             System.out.println("Sending response: " + output);
-            responseMsg.println(output);
+            for (String s : output.split("\n")) {
+              responseMsg.println(s);
+            }
           }
           
           // Inventory list
@@ -91,7 +96,9 @@ public class BookServer extends Thread {
 
             // Send response to client
             System.out.println("Sending response: " + output);
-            responseMsg.println(output);
+            for (String s : output.split("\n")) {
+              responseMsg.println(s);
+            }
           }
           
           // Student list request
@@ -102,7 +109,9 @@ public class BookServer extends Thread {
 
             // Send response to client
             System.out.println("Sending response: " + output);
-            responseMsg.println(output);
+            for (String s : output.split("\n")) {
+              responseMsg.println(s);
+            }
           }
           
           // Update or write file, client leaving
