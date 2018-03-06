@@ -53,6 +53,7 @@ public class BookServer {
       String bookName = recordBook.get(recordId);
       int count = inventory.get(bookName) + 1;
       inventory.put(bookName, count);
+      
       return true;
     }
   }
@@ -83,6 +84,8 @@ public class BookServer {
       System.out.println("Book: " + book + ", count = " + count);
       list.append("\"" + book + "\"" + " ").append(count + "\n");
     }
+    System.out.println(list.toString());
+    byte[] rbuffer = new byte[4096];
     return list.toString().trim();
   }
 
@@ -90,7 +93,7 @@ public class BookServer {
   public static synchronized void exit() throws IOException{
     File f = new File("../src/inventory.txt");
     FileWriter fwriter = new FileWriter(f);
-    PrintWriter writer = new PrintWriter(fwriter);
+    PrintWriter writer = new PrintWriter(fwriter, true);
     writer.println(listInventory());
 //    writer.close();
   }
