@@ -219,7 +219,7 @@ public class BookServer extends Thread {
 
   // Write to file "inventory.txt" and close servers
   public static synchronized void exit() throws IOException{
-    File f = new File("../src/inventory.txt");
+    File f = new File("inventory.txt");
     FileWriter fwriter = new FileWriter(f);
     PrintWriter writer = new PrintWriter(fwriter, true);
     writer.println(listInventory());
