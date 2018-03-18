@@ -1,0 +1,5 @@
+setmode T
+inventory
+setmode U
+inventory
+exit
