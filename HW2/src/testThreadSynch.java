@@ -1,6 +1,6 @@
 public class testThreadSynch implements Runnable {
-	final static int SIZE = 5;
-	final static int ROUND = 5;
+	final static int SIZE = 10;
+	final static int ROUND = 10;
 	
 	final ThreadSynch gate;
 	
