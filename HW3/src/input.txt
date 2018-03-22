@@ -2,3 +2,15 @@
 "The Great Gatsby" 15
 "Divergent" 10
 "The Count of Monte Cristo" 17
+"Pride and Prejudice" 13
+"The Catcher in the Rye" 4
+"1984" 2
+"The Grapes of Wrath" 24
+"To Kill a Mockingbird" 12
+"Twilight" 13
+"The Book Theif" 1
+"The Fault in Our Stars" 8
+"The Hitchhiker's Guide to the Galaxy" 3
+"One Hundred Years of Solitude" 12
+"The Adventures of Huckleberry Finn" 22
+"The Odyssey" 5

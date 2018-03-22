@@ -5,4 +5,13 @@ borrow Lucy "Divergent"
 list Mike
 return 1
 inventory
+setmode T
+borrow Alex "DNE Book"
+return 3
+return 1
+list Lucy
+list Jack
+list Alex
+borrow Alex "The Letter"
+inventory
 exit

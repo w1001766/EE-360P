@@ -177,6 +177,7 @@ public class BookServer extends Thread {
       ArrayList<Integer> studentRecord = readingList.get(name);
       if(studentRecord.size() == 1){
         readingList.remove(name);
+        recordBook.remove(recordId);
       }
       else{
         studentRecord.remove(recordId);
