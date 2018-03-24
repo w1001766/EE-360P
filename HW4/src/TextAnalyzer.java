@@ -10,22 +10,41 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+// Import everything for now...
+import java.util.*;
+import hava.io.*;
+
 // Do not change the signature of this class
 public class TextAnalyzer extends Configured implements Tool {
 
+/*---------------------------------------------------------------------------*/
+	// TEXT MAPPER
     // Replace "?" with your own output key / value types
     // The four template data types are:
     //     <Input Key Type, Input Value Type, Output Key Type, Output Value Type>
+
     public static class TextMapper extends Mapper<LongWritable, Text, ?, ?> {
         public void map(LongWritable key, Text value, Context context)
             throws IOException, InterruptedException
         {
             // Implementation of you mapper function
+
+            // Read line and format accordingly (lowercase, non-word character string)
+            // replaceAll("[^\\p{L}\\p{Nd}]+", "") also works as well in case of UTF8 
+            String line = value.toString().toLowerCase().replaceAll("[^a-zA-Z0-9\\s]", " ");
+            StringTokenizer itr = new StringTokenizer(line);
+	        while (itr.hasMoreTokens()) {
+	         	word.set(itr.nextToken());
+	        	context.write(word, one);
+	      	}
         }
     }
 
+/*---------------------------------------------------------------------------*/
+	// TEXT COMBINER
     // Replace "?" with your own key / value types
     // NOTE: combiner's output key / value types have to be the same as those of mapper
+
     public static class TextCombiner extends Reducer<?, ?, ?, ?> {
         public void reduce(Text key, Iterable<Tuple> tuples, Context context)
             throws IOException, InterruptedException
@@ -34,8 +53,11 @@ public class TextAnalyzer extends Configured implements Tool {
         }
     }
 
+/*---------------------------------------------------------------------------*/
+	// TEXT REDUCER
     // Replace "?" with your own input key / value types, i.e., the output
     // key / value types of your mapper function
+
     public static class TextReducer extends Reducer<?, ?, Text, Text> {
         private final static Text emptyText = new Text("");
 
@@ -59,11 +81,13 @@ public class TextAnalyzer extends Configured implements Tool {
         }
     }
 
+/*---------------------------------------------------------------------------*/
+
     public int run(String[] args) throws Exception {
         Configuration conf = this.getConf();
 
         // Create job
-        Job job = new Job(conf, "EID1_EID2"); // Replace with your EIDs
+        Job job = new Job(conf, "am74874_dpv292"); // Replace with your EIDs
         job.setJarByClass(TextAnalyzer.class);
 
         // Setup MapReduce job
