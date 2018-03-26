@@ -37,19 +37,18 @@ public class TextAnalyzer extends Configured implements Tool {
       for(int i = 0; i < words.length; i++){
         // for each context word
         Text contextword = new Text(words[i]);
-        ArrayWritable wordList = new ArrayWritable();
-        ArrayList<Writable> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList<>();
 
 
         // Populate list with query words
         for(int j = 0; j < words.length; j++){
           if(i != j){
-            list.add(new Text(words[j]));
+            list.add(words[j]);
           }
         }
 
-        // Convert ArrayList to array, and set it in ArrayWritable
-        wordList.set(list.toArray());
+        // Create the ArrayWritable to be sent to the combiner
+        ArrayWritable wordList = new ArrayWritable(list);
 
         // Send out contextword, querywordsList
         context.write(contextword, wordList);
@@ -70,11 +69,12 @@ public class TextAnalyzer extends Configured implements Tool {
       ArrayWritable combinedList = new ArrayWritable();
       for(ArrayWritable list : wordLists){
         ArrayList<Writable> querys = new ArrayList<>();
-        masterlist.addAll(querys);
+        masterList.addAll(querys);
       }
 
       // Convert ArrayList to array, and set it in ArrayWritable
-      combinedList.set(masterList.toArray());
+      Writable[] mlWritable = masterList.toArray();
+      combinedList.set(mlWritable);
 
       // Send out contextword, querywordsList
       context.write(key, combinedList);
@@ -89,7 +89,7 @@ public class TextAnalyzer extends Configured implements Tool {
   public static class TextReducer extends Reducer<Text, ArrayWritable, Text, Text> {
     private final static Text emptyText = new Text("");
 
-    public void reduce(Text key, ArrayWritable queryWords, Context context)
+    public void reduce(Text key, Iterable<ArrayWritable> queryWords, Context context)
     throws IOException, InterruptedException {
       // Implementation of your reducer function
       TreeMap<String, Integer> map = new TreeMap<>();
