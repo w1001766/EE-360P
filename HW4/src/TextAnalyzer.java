@@ -48,7 +48,7 @@ public class TextAnalyzer extends Configured implements Tool {
         }
 
         // Create the ArrayWritable to be sent to the combiner
-        String[] castList = (String)list.toArray();
+        String[] castList = (String [])list.toArray();
         ArrayWritable wordList = new ArrayWritable(castList);
 
         // Send out contextword, querywordsList
@@ -73,7 +73,7 @@ public class TextAnalyzer extends Configured implements Tool {
       }
 
       // Convert ArrayList to array, and set it in ArrayWritable
-      String[] mlWritable = (String)masterList.toArray();
+      String[] mlWritable = (String[])masterList.toArray();
       ArrayWritable combinedList = new ArrayWritable(mlWritable);
 
       // Send out contextword, querywordsList
@@ -99,7 +99,7 @@ public class TextAnalyzer extends Configured implements Tool {
       for (Writable queryWord : queryWords) {
         if (!key.toString().equals(queryWord.toString())) {
 
-          if (!map.contains(queryWord.toString())) {
+          if (!map.containsKey(queryWord.toString())) {
             map.put(queryWord.toString(), 1);
             
             if (1 > highCount) {
@@ -108,7 +108,7 @@ public class TextAnalyzer extends Configured implements Tool {
 
 
           } else {
-            map.replace(queryWord.toString(), map.get(queryWord.toString())+1);
+            map.put(queryWord.toString(), map.get(queryWord.toString())+1);
 
             highCount = highCount < map.get(queryWord.toString()) ? 
                                     map.get(queryWord.toString()) : highCount;
@@ -117,13 +117,13 @@ public class TextAnalyzer extends Configured implements Tool {
         }
       }
 
-      context.write(key, new Text(highCount));
+      context.write(key, new Text(Integer.toString(highCount)));
 
       for (String queryWord : map.keySet()) {
         Text queryWordText = new Text(queryWord);
         String queryWordCount = map.get(queryWord).toString() + ">";
         queryWordText.set("<" + queryWord + ",");
-        context.write(queryWordText, new Text(count));
+        context.write(queryWordText, new Text(queryWordCount));
       }
 
       context.write(emptyText, emptyText);
