@@ -48,7 +48,7 @@ public class TextAnalyzer extends Configured implements Tool {
         }
 
         // Create the ArrayWritable to be sent to the combiner
-        String[] castList = list.toArray();
+        String[] castList = (String)list.toArray();
         ArrayWritable wordList = new ArrayWritable(castList);
 
         // Send out contextword, querywordsList
@@ -67,15 +67,14 @@ public class TextAnalyzer extends Configured implements Tool {
     throws IOException, InterruptedException {
 
       ArrayList<Writable> masterList = new ArrayList<>();
-      ArrayWritable combinedList = new ArrayWritable();
       for(ArrayWritable list : wordLists){
         ArrayList<Writable> querys = new ArrayList<>();
         masterList.addAll(querys);
       }
 
       // Convert ArrayList to array, and set it in ArrayWritable
-      Writable[] mlWritable = masterList.toArray();
-      combinedList.set(mlWritable);
+      String[] mlWritable = (String)masterList.toArray();
+      ArrayWritable combinedList = new ArrayWritable(mlWritable);
 
       // Send out contextword, querywordsList
       context.write(key, combinedList);
