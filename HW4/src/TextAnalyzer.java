@@ -89,11 +89,46 @@ public class TextAnalyzer extends Configured implements Tool {
   public static class TextReducer extends Reducer<Text, ArrayWritable, Text, Text> {
     private final static Text emptyText = new Text("");
 
-    public void reduce(Text key, Iterable<MapWritable> wordmaps, Context context)
+    public void reduce(Text key, ArrayWritable queryWords, Context context)
     throws IOException, InterruptedException {
       // Implementation of your reducer function
-      TreeMap<String, IntWritable> map = new TreeMap<>();
+      TreeMap<String, Integer> map = new TreeMap<>();
 
+      int highCount = 0;
+
+      for (Writable queryWord : queryWords) {
+        if (!key.toString().equals(queryWord.toString())) {
+
+          if (!map.contains(queryWord.toString())) {
+            map.put(queryWord.toString(), 1);
+            
+            if (1 > highCount) {
+              highCount = 1;
+            }
+
+
+          } else {
+            map.replace(queryWord.toString(), map.get(queryWord.toString())+1);
+
+            highCount = highCount < map.get(queryWord.toString()) ? 
+                                    map.get(queryWord.toString()) : highCount;
+                                                                    
+          }
+        }
+      }
+
+      context.write(key, new Text(highCount));
+
+      for (String queryWord : map.keySet()) {
+        Text queryWordText = new Text(queryWord);
+        String queryWordCount = map.get(queryWord).toString() + ">";
+        queryWordText.set("<" + queryWord + ",");
+        context.write(queryWordText, new Text(count));
+      }
+
+      context.write(emptyText, emptyText);
+
+/*
       for(MapWritable wordmap : wordmaps){
         for(Map.Entry<Writable, Writable> entry: wordmap.entrySet()){
           Text queryText = (Text)entry.getKey();
@@ -118,6 +153,7 @@ public class TextAnalyzer extends Configured implements Tool {
 
       // Empty line for ending the current context key
       context.write(emptyText, emptyText);
+*/
     }
   }
 
