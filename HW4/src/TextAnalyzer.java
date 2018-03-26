@@ -48,7 +48,8 @@ public class TextAnalyzer extends Configured implements Tool {
         }
 
         // Create the ArrayWritable to be sent to the combiner
-        ArrayWritable wordList = new ArrayWritable(list);
+        String[] castList = list.toArray();
+        ArrayWritable wordList = new ArrayWritable(castList);
 
         // Send out contextword, querywordsList
         context.write(contextword, wordList);
