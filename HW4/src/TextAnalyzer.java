@@ -40,8 +40,11 @@ public class TextAnalyzer extends Configured implements Tool {
 				//Text word_txt = new Text(word);
 				if(!wordSet.containsKey(word))
 					wordSet.put(word, new IntWritable(1));
-				else
-					wordSet.put(word, wordSet.get(word).set(wordSet.get(word).get()+1));
+				else{
+					IntWritable count = wordSet.get(word);
+					int count_val = count.get() + 1;
+					wordSet.put(word, new IntWritable(count_val));
+				}
 			}
 
       // Send key-value pairs <Text, MapWritable<Text, IntWritable>> to Combiner/Reducer
@@ -53,8 +56,11 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Remove a single occurence of that word from the wordset
         int count = wordSet.get(word).get()-1;
-        if(count != 0)
-					wordSet.put(word, wordSet.get(word).set(wordSet.get(word).get()-1));
+        if(count != 0){
+					IntWritable count = wordSet.get(word);
+					int count_val = count.get() - 1;
+					wordSet.put(word, new IntWritable(count_val));
+				}
 				else
 					wordSet.remove(word);
 
@@ -66,8 +72,11 @@ public class TextAnalyzer extends Configured implements Tool {
 				context.write(contextword, wordmap);
 
         // Add the occurence back into the wordset
-        if(count != 0)
-					wordSet.put(word, wordSet.get(word).set(wordSet.get(word).get()+1))
+        if(count != 0){
+					IntWritable count = wordSet.get(word);
+					int count_val = count.get() + 1;
+					wordSet.put(word, new IntWritable(count_val));
+				}
 				else
 					wordSet.put(word, new IntWritable(1));
 			}
@@ -92,7 +101,7 @@ public class TextAnalyzer extends Configured implements Tool {
 					String query = entry.getKey().toString();
 					IntWritable count = entry.getValue();
 					if(wordSet.containsKey(query)){
-						IntWritable value = wordSet.getValue(query);
+						IntWritable value = wordSet.get(query);
 						value.set(value.get() + count.get());
 					}
 					else{
@@ -129,7 +138,8 @@ public class TextAnalyzer extends Configured implements Tool {
 
 			for(MapWritable wordmap : wordmaps){
 				for(Map.Entry<Writable, Writable> entry: wordmap.entrySet()){
-					String query = (Text)entry.getKey().toString();
+					Text queryText = (Text)entry.getKey();
+					String query = queryText.toString();
 					IntWritable count = (IntWritable)entry.getValue();
 					map.put(query, count);
       	}
