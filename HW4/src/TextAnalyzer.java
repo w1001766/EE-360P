@@ -57,8 +57,8 @@ public class TextAnalyzer extends Configured implements Tool {
         // Remove a single occurence of that word from the wordset
         int count = wordSet.get(word).get()-1;
         if(count != 0){
-					IntWritable value = wordSet.get(word);
-					int count_val = value.get() - 1;
+					IntWritable tmpvalue = wordSet.get(word);
+					int count_val = tmpvalue.get() - 1;
 					wordSet.put(word, new IntWritable(count_val));
 				}
 				else
@@ -73,8 +73,8 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Add the occurence back into the wordset
         if(count != 0){
-					IntWritable value = wordSet.get(word);
-					int count_val = value.get() + 1;
+					IntWritable tmpvalue = wordSet.get(word);
+					int count_val = tmpvalue.get() + 1;
 					wordSet.put(word, new IntWritable(count_val));
 				}
 				else
