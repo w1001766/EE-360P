@@ -41,7 +41,7 @@ public class TextAnalyzer extends Configured implements Tool {
 				if(!wordSet.containsKey(word))
 					wordSet.put(word, new IntWritable(1));
 				else
-					wordSet.put(word, wordSet.get(word).get()+1);
+					wordSet.put(word, wordSet.get(word).set(wordSet.get(word).get()+1));
 			}
 
       // Send key-value pairs <Text, MapWritable<Text, IntWritable>> to Combiner/Reducer
@@ -54,7 +54,7 @@ public class TextAnalyzer extends Configured implements Tool {
         // Remove a single occurence of that word from the wordset
         int count = wordSet.get(word).get()-1;
         if(count != 0)
-					wordSet.put(word, wordSet.get(word).get()-1);
+					wordSet.put(word, wordSet.get(word).set(wordSet.get(word).get()-1));
 				else
 					wordSet.remove(word);
 
@@ -67,7 +67,7 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Add the occurence back into the wordset
         if(count != 0)
-					wordSet.put(word, wordSet.get(word).get()+1);
+					wordSet.put(word, wordSet.get(word).set(wordSet.get(word).get()+1))
 				else
 					wordSet.put(word, new IntWritable(1));
 			}
@@ -92,7 +92,8 @@ public class TextAnalyzer extends Configured implements Tool {
 					String query = entry.getKey().toString();
 					IntWritable count = entry.getValue();
 					if(wordSet.containsKey(query)){
-						wordSet.getValue(query).set(wordSet.getValue(query).get() + count.get());
+						IntWritable value = wordSet.getValue(query);
+						value.set(value.get() + count.get());
 					}
 					else{
 						wordSet.put(query, count);
@@ -127,24 +128,27 @@ public class TextAnalyzer extends Configured implements Tool {
       TreeMap<String, IntWritable> map = new TreeMap<>();
 
 			for(MapWritable wordmap : wordmaps){
-				for(Map.Entry<Text, IntWritable> entry: wordmap.entrySet()){
-					String query = entry.getKey().toString();
-					IntWritable count = entry.getValue();
-					wordSet.put(query, count);
+				for(Map.Entry<Writable, Writable> entry: wordmap.entrySet()){
+					String query = (Text)entry.getKey().toString();
+					IntWritable count = (IntWritable)entry.getValue();
+					map.put(query, count);
       	}
 			}
 
       // Write out the results; you may change the following example
       // code to fit with your reducer function.
-      //   Write out the current context key
+      // Write out the current context key
 			context.write(key, emptyText);
-      //   Write out query words and their count
+
+      // Write out query words and their count
 			for(String queryWord: map.keySet()){
+				Text queryWordText = new Text(queryWord);
 				String count = map.get(queryWord).toString() + ">";
 				queryWordText.set("<" + queryWord + ",");
 				context.write(queryWordText, new Text(count));
 			}
-      //   Empty line for ending the current context key
+
+      // Empty line for ending the current context key
 			context.write(emptyText, emptyText);
 		}
 	}
