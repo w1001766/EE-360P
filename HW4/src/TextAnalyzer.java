@@ -57,8 +57,8 @@ public class TextAnalyzer extends Configured implements Tool {
         // Remove a single occurence of that word from the wordset
         int count = wordSet.get(word).get()-1;
         if(count != 0){
-					IntWritable count = wordSet.get(word);
-					int count_val = count.get() - 1;
+					IntWritable value = wordSet.get(word);
+					int count_val = value.get() - 1;
 					wordSet.put(word, new IntWritable(count_val));
 				}
 				else
@@ -73,8 +73,8 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Add the occurence back into the wordset
         if(count != 0){
-					IntWritable count = wordSet.get(word);
-					int count_val = count.get() + 1;
+					IntWritable value = wordSet.get(word);
+					int count_val = value.get() + 1;
 					wordSet.put(word, new IntWritable(count_val));
 				}
 				else
@@ -97,9 +97,10 @@ public class TextAnalyzer extends Configured implements Tool {
 
       // Combine querywords-occurrence pairs into one TreeMap
       for(MapWritable wordmap : wordmaps){
-      	for(Map.Entry<Text, IntWritable> entry: wordmap.entrySet()){
-					String query = entry.getKey().toString();
-					IntWritable count = entry.getValue();
+      	for(Map.Entry<Writable, Writable> entry: wordmap.entrySet()){
+					Text queryText = (Text)entry.getKey();
+					String query = queryText.toString();
+					IntWritable count = (IntWritable)entry.getValue();
 					if(wordSet.containsKey(query)){
 						IntWritable value = wordSet.get(query);
 						value.set(value.get() + count.get());
