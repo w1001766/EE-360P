@@ -10,9 +10,10 @@ BIN = ./build/
 
 # Source file directory
 SRC = ./src/
+HADOOP = /etc/hadoop:/usr/lib/hadoop-3.0.1/share/hadoop/common/lib/*:/usr/lib/hadoop-3.0.1/share/hadoop/common/*:/usr/lib/hadoop-3.0.1/share/hadoop/hdfs:/usr/lib/hadoop-3.0.1/share/hadoop/hdfs/lib/*:/usr/lib/hadoop-3.0.1/share/hadoop/hdfs/*:/usr/lib/hadoop-3.0.1/share/hadoop/mapreduce/*:/usr/lib/hadoop-3.0.1/share/hadoop/yarn:/usr/lib/hadoop-3.0.1/share/hadoop/yarn/lib/*:/usr/lib/hadoop-3.0.1/share/hadoop/yarn/*
 
 # Compiler flags
-JAVAFLAGS = -g -d $(BIN) -cp $(SRC) -target $(JVM)
+JAVAFLAGS = -g -d $(BIN) -cp $(SRC) -cp $(HADOOP) -target $(JVM)
 
 # Create .class file
 COMPILE = $(JAVAC) $(JAVAFLAGS)

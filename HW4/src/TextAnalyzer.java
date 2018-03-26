@@ -31,17 +31,17 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Read line and format accordingly (lowercase, non-word character string)
         // replaceAll("[^\\p{L}\\p{Nd}]+", "") also works as well in case of UTF8 
-			private String line = value.toString().toLowerCase().replaceAll("[^a-zA-Z0-9\\s]", " ");
-			private String[] words = line.split(" ");
+			String line = value.toString().toLowerCase().replaceAll("[^a-zA-Z0-9\\s]", " ");
+			String[] words = line.split(" ");
 
         // Create a set of all words and # of occurrences in line 
-			private TreeMap<String, IntWritable> wordSet = new TreeMap<>();
+			TreeMap<String, IntWritable> wordSet = new TreeMap<>();
 			for(String word: words){
 				//Text word_txt = new Text(word);
 				if(!wordSet.containsKey(word))
 					wordSet.put(word, new IntWritable(1));
 				else
-					wordSet.put(word, wordSet.get(word)+1);
+					wordSet.put(word, wordSet.get(word).get()+1);
 			}
 
       // Send key-value pairs <Text, MapWritable<Text, IntWritable>> to Combiner/Reducer
@@ -52,9 +52,9 @@ public class TextAnalyzer extends Configured implements Tool {
 				MapWritable wordmap = new MapWritable();
 
         // Remove a single occurence of that word from the wordset
-        int count = wordSet.get(word)-1;
+        int count = wordSet.get(word).get()-1;
         if(count != 0)
-					wordSet.put(word, wordSet.get(word)-1);
+					wordSet.put(word, wordSet.get(word).get()-1);
 				else
 					wordSet.remove(word);
 
@@ -67,7 +67,7 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Add the occurence back into the wordset
         if(count != 0)
-					wordSet.put(word, wordSet.get(word)+1);
+					wordSet.put(word, wordSet.get(word).get()+1);
 				else
 					wordSet.put(word, new IntWritable(1));
 			}
@@ -84,7 +84,7 @@ public class TextAnalyzer extends Configured implements Tool {
 		throws IOException, InterruptedException
 		{
       // Implementation of your combiner function
-			private TreeMap<String, IntWritable> wordSet = new TreeMap<>();
+			TreeMap<String, IntWritable> wordSet = new TreeMap<>();
 
       // Combine querywords-occurrence pairs into one TreeMap
       for(MapWritable wordmap : wordmaps){
@@ -124,7 +124,7 @@ public class TextAnalyzer extends Configured implements Tool {
 		throws IOException, InterruptedException
 		{
       // Implementation of your reducer function
-      private TreeMap<String, IntWritable> map = new TreeMap<>();
+      TreeMap<String, IntWritable> map = new TreeMap<>();
 
 			for(MapWritable wordmap : wordmaps){
 				for(Map.Entry<Text, IntWritable> entry: wordmap.entrySet()){
@@ -182,7 +182,7 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Execute job and return status
         return job.waitForCompletion(true) ? 0 : 1;
-      }
+  }
 
     // Do not modify the main method
       public static void main(String[] args) throws Exception {
@@ -191,6 +191,7 @@ public class TextAnalyzer extends Configured implements Tool {
       }
 
       /*---------------------------------------------------------------------------*/
+}
 
 // You may define sub-classes here.
 
