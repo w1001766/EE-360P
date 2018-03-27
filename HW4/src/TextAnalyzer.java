@@ -156,11 +156,12 @@ public class TextAnalyzer extends Configured implements Tool {
 
         // Print out rest of the querywords
         for (String queryWord : map.keySet()) {
-          if (map.get(queryWord) == highCount) continue;
-          Text queryWordText = new Text(queryWord);
-          String queryWordCount = map.get(queryWord).toString().trim() + ">";
-          queryWordText.set(("<" + queryWord + ",").trim());
-          context.write(queryWordText, new Text(queryWordCount));
+          if (map.get(queryWord) != highCount){
+            Text queryWordText = new Text(queryWord);
+            String queryWordCount = map.get(queryWord).toString().trim() + ">";
+            queryWordText.set(("<" + queryWord + ",").trim());
+            context.write(queryWordText, new Text(queryWordCount));
+          }
         }
         context.write(emptyText, emptyText);
       }
