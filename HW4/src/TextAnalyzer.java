@@ -110,6 +110,8 @@ public class TextAnalyzer extends Configured implements Tool {
       TreeMap<String, Integer> map = new TreeMap<>();
 
       int highCount = 0;
+      
+      // Populate TreeMap to contain all querywords and occurrences
       for (TextArrayWritable queryWords : queryLists) {
         for (Writable writeWord : queryWords.get()) {
           Text queryWord = (Text)writeWord;
@@ -131,9 +133,27 @@ public class TextAnalyzer extends Configured implements Tool {
           }
         } 
       }
+
+      // Find the subset of querywords with value highCount
+      ArrayList<Text> maxQueryWords = new ArrayList<Text>();
+      for (String word : map){
+        if(map.get(word) == highCount){
+          maxQueryWords.add(new Text(word));
+          map.remove(word);
+        }
+      }
       
       if (!key.toString().equals("") && !key.toString().equals(" ")) {
         context.write(key, new Text(Integer.toString(highCount)));
+        
+        // Print out highCount querywords
+        for (Text maxWord : maxQueryWords){
+          String queryWordCount = highCount.toString() + ">";
+          queryWordText.set(("<" + queryWord + ",").trim());
+          context.write(queryWordText, new Text(queryWordCount)); 
+        }
+
+        // Print out rest of the querywords
         for (String queryWord : map.keySet()) {
           Text queryWordText = new Text(queryWord);
           String queryWordCount = map.get(queryWord).toString().trim() + ">";
