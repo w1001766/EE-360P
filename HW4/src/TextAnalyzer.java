@@ -136,7 +136,7 @@ public class TextAnalyzer extends Configured implements Tool {
 
       // Find the subset of querywords with value highCount
       ArrayList<Text> maxQueryWords = new ArrayList<Text>();
-      for (String word : map){
+      for (String word : map.keySet()){
         if(map.get(word) == highCount){
           maxQueryWords.add(new Text(word));
           map.remove(word);
@@ -148,8 +148,9 @@ public class TextAnalyzer extends Configured implements Tool {
         
         // Print out highCount querywords
         for (Text maxWord : maxQueryWords){
-          String queryWordCount = highCount.toString() + ">";
-          queryWordText.set(("<" + queryWord + ",").trim());
+          String queryWordCount = Integer.toString(highCount) + ">";
+          Text queryWordText = new Text(maxWord);
+          queryWordText.set(("<" + maxWord + ",").trim());
           context.write(queryWordText, new Text(queryWordCount)); 
         }
 
