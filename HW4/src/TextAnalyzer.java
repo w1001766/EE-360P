@@ -221,4 +221,3 @@ public class TextAnalyzer extends Configured implements Tool {
   }
 }
 
-// You may define sub-classes here.
