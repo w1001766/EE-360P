@@ -23,7 +23,7 @@ public class TextAnalyzer extends Configured implements Tool {
     // The four template data types are:
     //     <Input Key Type, Input Value Type, Output Key Type, Output Value Type>
 
-  public static class TextMapper extends Mapper<LongWritable, Text, Text, TextArrayWritable> {
+  public static class TextMapper extends Mapper<LongWritable, Text, Text, Text> {
     public void map(LongWritable key, Text value, Context context)
     throws IOException, InterruptedException {
       // Implementation of your mapper function
@@ -34,7 +34,9 @@ public class TextAnalyzer extends Configured implements Tool {
       String[] words = line.trim().split("\\s+");
       Set<String> contextWords = new HashSet<String>();
 
-      // New implementation
+      // ---------------------------------------------
+      // new stuffs
+      
       for(int i = 0; i < words.length; i++){
         if(!contextWords.contains(words[i])){
           // for each context word
@@ -45,23 +47,10 @@ public class TextAnalyzer extends Configured implements Tool {
           // Populate list with query words
           for(int j = 0; j < words.length; j++){
             if(i != j){
-              list.add(words[j]);
+              context.write(contextword, new Text(words[j]));
             }
           }
-
-          // Create the ArrayWritable to be sent to the combiner
-          //String[] castList = (String[])list.toArray();
-          Object [] objList = list.toArray();
-          String [] castList = Arrays.copyOf(objList, objList.length, String[].class);
-          Text [] textList = new Text[objList.length];
-          for (int x=0; x < objList.length; ++x) {
-            textList[x] = new Text(castList[x]);
-          }
-          TextArrayWritable wordList = new TextArrayWritable(textList);
-
-          // Send out contextword, querywordsList
-          context.write(contextword, wordList);
-        }
+        } 
       }
     }
   }
@@ -71,28 +60,58 @@ public class TextAnalyzer extends Configured implements Tool {
     // Replace "?" with your own key / value types
     // NOTE: combiner's output key / value types have to be the same as those of mapper
 
-  public static class TextCombiner extends Reducer<Text, TextArrayWritable, Text, TextArrayWritable> {
-    public void reduce(Text key, Iterable<TextArrayWritable> wordLists, Context context)
+  public static class TextCombiner extends Reducer<Text, Text, Text, Text> {
+    public void reduce(Text key, Iterable<Text> wordLists, Context context)
     throws IOException, InterruptedException {
 
-      ArrayList<Writable> masterList = new ArrayList<>();
-      for(TextArrayWritable list : wordLists){
-        Writable[] writableList = list.get();
-        ArrayList<Writable> querys = new ArrayList<Writable>(Arrays.asList(writableList));
-        masterList.addAll(querys);
+    TreeMap<String, Integer> map = new TreeMap<>();
+    ArrayList<String> maxQueryWords = new ArrayList<String>();
+    int highCount = 0;
+
+    // Do quick maths on querywords for a specific contextword
+    for (Text qWord : wordLists){
+      // Populate TreeMap to contain all querywords and occurrences
+      // if the set doesn't contain the queryword, add a new entry
+      String queryWord = qWord.toString();
+      if (!map.containsKey(queryWord)) {
+        map.put(queryWord, 1);  
+        if (1 > highCount) {
+          highCount = 1;
+        }
+      }
+      
+      // update an entry that already exists!
+      else {
+        map.put(queryWord, map.get(queryWord)+1);
+        highCount = highCount < map.get(queryWord) ? 
+                                map.get(queryWord) : highCount;
+      }
+    }
+
+
+      // Find the subset of querywords with value highCount
+      for (String word : map.keySet()){
+        if(map.get(word) == highCount){
+          maxQueryWords.add(word);
+        }
       }
 
-      // Convert ArrayList to array, and set it in ArrayWritable
-      Object [] objList = masterList.toArray();
-      Writable [] castList = Arrays.copyOf(objList, objList.length, Writable[].class);
-      Text [] textList = new Text[objList.length];
-      for (int x=0; x < objList.length; ++x) {
-        textList[x] = (Text)castList[x];
-      }
-      TextArrayWritable combinedList = new TextArrayWritable(textList);
+      // send highCount
+      // context.write(key, new Text(Integer.toString(highCount)));
 
-      // Send out contextword, querywordsList
-      context.write(key, combinedList);
+      // send highCount tuples
+      // for(String maxQWord : maxQueryWords){
+      //   // remove highCount tuples from the map to get rid of dupes
+      //   // map.remove(maxQWord);
+      //   String output = maxQWord + " " + Integer.toString(highCount);
+      //   context.write(key, new Text(output));
+      // }
+
+      // send queryWord tuples
+      for(String word : map.keySet()){
+        String output = word + " " + Integer.toString(map.get(word));
+        context.write(key, new Text(output));
+      }
     }
   }
 
@@ -101,51 +120,50 @@ public class TextAnalyzer extends Configured implements Tool {
     // Replace "?" with your own input key / value types, i.e., the output
     // key / value types of your mapper function
 
-  public static class TextReducer extends Reducer<Text, TextArrayWritable, Text, Text> {
+  public static class TextReducer extends Reducer<Text, Text, Text, Text> {
     private final static Text emptyText = new Text("");
 
-    public void reduce(Text key, Iterable<TextArrayWritable> queryLists, Context context)
+    public void reduce(Text key, Iterable<Text> masterList, Context context)
     throws IOException, InterruptedException {
       // Implementation of your reducer function
       TreeMap<String, Integer> map = new TreeMap<>();
-
+      ArrayList<Text> maxQueryWords = new ArrayList<Text>();
       int highCount = 0;
-      
-      // Populate TreeMap to contain all querywords and occurrences
-      for (TextArrayWritable queryWords : queryLists) {
-        for (Writable writeWord : queryWords.get()) {
-          Text queryWord = (Text)writeWord;
 
-          if (!map.containsKey((queryWord).toString())) {
-            map.put((queryWord).toString(), 1);
-            
-            if (1 > highCount) {
-              highCount = 1;
-            }
+      // Parse tuples to get <queryword, occurrence>
+      for (Text tuple : masterList){
+        String[] strTuple = tuple.toString().split(" ");
+        String queryWord = strTuple[0];
+        int count = Integer.parseInt(strTuple[1]);
 
-
-          } else {
-            map.put((queryWord).toString(), map.get((queryWord).toString())+1);
-
-            highCount = highCount < map.get((queryWord).toString()) ? 
-                                    map.get((queryWord).toString()) : highCount;
-                                                                    
+        if (!map.containsKey(queryWord)) {
+          map.put(queryWord, count);  
+          if (count > highCount) {
+            highCount = count;
           }
-        } 
+        }
+        
+        // update an entry that already exists!
+        else {
+          map.put(queryWord, map.get(queryWord)+count);
+          highCount = highCount < map.get(queryWord) ? 
+                                  map.get(queryWord) : highCount;
+        }
       }
 
-      // Find the subset of querywords with value highCount
-      ArrayList<Text> maxQueryWords = new ArrayList<Text>();
+      //Find subset of querywords with value highCount
+      
       for (String word : map.keySet()){
         if(map.get(word) == highCount){
           maxQueryWords.add(new Text(word));
           // map.remove(word);
         }
       }
-      
+
       if (!key.toString().equals("") && !key.toString().equals(" ")) {
+        // Print out the context Word
         context.write(key, new Text(Integer.toString(highCount)));
-        
+
         // Print out highCount querywords
         for (Text maxWord : maxQueryWords){
           String queryWordCount = Integer.toString(highCount) + ">";
@@ -155,11 +173,11 @@ public class TextAnalyzer extends Configured implements Tool {
         }
 
         // Print out rest of the querywords
-        for (String queryWord : map.keySet()) {
-          if (map.get(queryWord) != highCount){
-            Text queryWordText = new Text(queryWord);
-            String queryWordCount = map.get(queryWord).toString().trim() + ">";
-            queryWordText.set(("<" + queryWord + ",").trim());
+        for (String qWord : map.keySet()) {
+          if (map.get(qWord) != highCount){
+            Text queryWordText = new Text(qWord);
+            String queryWordCount = map.get(qWord).toString().trim() + ">";
+            queryWordText.set(("<" + qWord + ",").trim());
             context.write(queryWordText, new Text(queryWordCount));
           }
         }
@@ -189,7 +207,7 @@ public class TextAnalyzer extends Configured implements Tool {
     //   If your mapper and combiner's  output types are different from Text.class,
     //   then uncomment the following lines to specify the data types.
     //job.setMapOutputKeyClass(?.class);
-    job.setMapOutputValueClass(TextArrayWritable.class);
+    //job.setMapOutputValueClass(TextArrayWritable.class);
 
     // Input
     FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -208,17 +226,4 @@ public class TextAnalyzer extends Configured implements Tool {
     int res = ToolRunner.run(new Configuration(), new TextAnalyzer(), args);
     System.exit(res);
   }
-
-  /*---------------------------------------------------------------------------*/
-  private static class TextArrayWritable extends ArrayWritable {
-    public TextArrayWritable() {
-      super(Text.class);
-    }
-
-    public TextArrayWritable(Text[] strings) {
-      super(Text.class, strings);
-    }
-  }
 }
-
-// You may define sub-classes here.
