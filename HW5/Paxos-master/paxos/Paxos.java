@@ -2,6 +2,7 @@ package paxos;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
@@ -23,17 +24,12 @@ public class Paxos implements PaxosRMI, Runnable{
     AtomicBoolean unreliable;// for testing
 
     // Your data here
-    Map<Integer, Instance> map;			//Map<seq #, Instance> to store proposals
+    Map<Integer, Message> map;			//Map<seq #, Instance> to store proposals
     int seq;
     Object value;
     int numPaxos;
     int[] done;
-    
-    int highPrepare = -1;
-    int highAccept = -1;
-    
-    Object highAcceptvalue = null;
-    
+
     
 
     /**
@@ -51,9 +47,8 @@ public class Paxos implements PaxosRMI, Runnable{
         this.unreliable = new AtomicBoolean(false);
 
         // Your initialization code here
-        this.map = new HashMap<>();
+        this.map = new ConcurrentHashMap<>();
         this.numPaxos = peers.length;
-        this.highPrepare = 0;
         this.done = new int[this.numPaxos];
         for(int i = 0; i < this.done.length; i++){
             this.done[i] = -1;
@@ -135,19 +130,7 @@ public class Paxos implements PaxosRMI, Runnable{
     public void run(){
         //Your code here
     	if(this.seq < this.Min()) return;
-    	this.Proposer(this.seq, this.value);
-        
-    }
-    
-    public void Proposer(int seq, Object value) {
-//    	while not decided:
-//	    choose n, unique and higher than any n seen so far
-//	    send prepare(n) to all servers including self
-//	    if prepare_ok(n, n_a, v_a) from majority:
-//	      v' = v_a with highest n_a; choose own v otherwise
-//	      send accept(n, v') to all
-//	      if accept_ok(n) from majority:
-//	        send decided(v') to all
+    	
     	while(true) {
     		Response resp = sendPrepare(seq, value);
     		boolean OK = false;
@@ -158,23 +141,45 @@ public class Paxos implements PaxosRMI, Runnable{
     			this.sendDecide(seq, resp.num, resp.value);				// send decision to all
                 break;
     		}
-    		
     		retStatus status = this.Status(seq);
             if(status.state == State.Decided){
                 break;
             }
     	}
+        
+    }
+    
+    private class Message {
+
+        int prepareMax;
+        int acceptMax;
+        State state;
+        Object acceptVal;
+
+        public Message(){
+            this.prepareMax = Integer.MIN_VALUE;
+            this.acceptMax = Integer.MIN_VALUE;
+            this.state = State.Pending;
+            this.acceptVal = null;
+        }
     }
     
     public Response sendPrepare(int seq, Object value){
-    	int prepare = Max() + 1;	// Generate a proposal number (Lamport clock)
-    	Request req = new Request(seq, prepare, value);
+    	checkMap(seq);
+    	Message msg = map.get(seq);
+    	int proposalNum;
     	
+    	if(msg.prepareMax == Integer.MIN_VALUE) proposalNum = this.me + 1;
+    	else
+    		proposalNum = (msg.prepareMax/numPaxos + 1) * numPaxos + this.me + 1;	// Generate a proposal number(?)
+    	
+    	
+    	Request req = new Request(seq, proposalNum, value);
     	int replyNum = -1;
     	Object replyVal = value;
     	int count = 0;
     	
-    	for(int i = 0; i < peers.length; i++) {			// Send a "Prepare" proposal to accepters
+    	for(int i = 0; i < numPaxos; i++) {			// Send a "Prepare" proposal to accepters
     		Response resp;								// receive a response back from the accepters
     		if(i == this.me) {
     			resp = this.Prepare(req);
@@ -194,7 +199,7 @@ public class Paxos implements PaxosRMI, Runnable{
     	Response resp = new Response();
         if(count >= this.majority()){
             resp.ack = true;
-            resp.num = prepare;
+            resp.num = proposalNum;
             resp.value = replyVal;
         }
         
@@ -203,47 +208,43 @@ public class Paxos implements PaxosRMI, Runnable{
 
     public boolean sendAccept(int seq, int proposalNum, Object value) {
     	int count = 0;
-    	for(int i = 0; i < this.peers.length; i++){
+    	for(int i = 0; i < numPaxos; i++){
             Response resp;
-            if(i == this.me){
+            if(i == this.me)
                 resp = Accept(new Request(seq, proposalNum, value));
-            }
-            else{
+            
+            else
                 resp = this.Call("Accept", new Request(seq, proposalNum, value), i);
-            }
-
-            if(resp != null && resp.ack){
+            
+            if(resp != null && resp.ack)
                 count++;
-            }
         }
         return count >= this.majority();
     }
     
     public void sendDecide(int seq, int proposalNum, Object value) {
-    	this.mutex.lock();
-        try{
-            Instance ins = this.map.get(seq);
-            ins.v_accept = value;
-            ins.state = State.Decided;
-            ins.max_accept = proposalNum;
-            ins.max_prepare = proposalNum;
-
-        } finally {
-            this.mutex.unlock();
-        }
+        Message msg = this.map.get(seq);
+        msg.acceptVal = value;
+        msg.state = State.Decided;
+        msg.acceptMax = proposalNum;
+        msg.prepareMax = proposalNum;
 
         for(int i = 0; i < this.peers.length; i++){
             Response rsp;
-            if(i == this.me){
-                continue;
-            }
-            else {
-                int doneVal = this.done[this.me];
+            if(i != this.me){
+            	int doneVal = this.done[this.me];
                 rsp = this.Call("Decide", new Request(seq, proposalNum, value, doneVal, this.me), i);
-                //call();
             }
         }
 
+    }
+    
+    
+    private void checkMap(int seq) {
+    	if(!map.containsKey(seq)) {
+    		Message msg = new Message();
+    		map.put(seq, msg);
+    	}
     }
     
     // RMI handler
@@ -257,26 +258,20 @@ public class Paxos implements PaxosRMI, Runnable{
 		  else
 		    reply prepare_reject
     	 */
-    	this.mutex.lock();
-    	if(!map.containsKey(req.seq)) {
-    		Instance ins = new Instance();
-    		map.put(req.seq, ins);
-    	}
-    	Instance ins = map.get(req.seq);
+    	checkMap(req.seq);
+    	Message msg = map.get(req.seq);
     	
     	Response resp = new Response();
-    	if(req.proposalNum > ins.max_prepare){
+    	if(req.proposalNum > msg.prepareMax){
             // update proposer number
-            ins.max_prepare = req.proposalNum;
-            // if ok, reply accept num and value
+            msg.prepareMax = req.proposalNum;
             resp.ack = true;
-            resp.num = ins.max_accept;
-            resp.value = ins.v_accept;
+            resp.num = msg.acceptMax;
+            resp.value = msg.acceptVal;
         }
         else{
             resp.ack = false;
         }
-        this.mutex.unlock();
         return resp;
     }
 
@@ -294,46 +289,35 @@ public class Paxos implements PaxosRMI, Runnable{
 		  else
 		    reply accept_reject
     	 */
-    	this.mutex.lock();
-        if(!this.map.containsKey(req.seq)){
-            Instance ins = new Instance();
-            this.map.put(req.seq, ins);
-        }
-        Instance ins = this.map.get(req.seq);
+    	checkMap(req.seq);
+        Message msg = this.map.get(req.seq);
+        Response resp = new Response();
 
-        Response rsp = new Response();
-
-        if(req.proposalNum >= ins.max_prepare){
-            ins.max_accept = req.proposalNum;
-            ins.v_accept = req.val;
-            ins.max_prepare = req.proposalNum;
-            rsp.ack = true;
+        if(req.proposalNum >= msg.prepareMax){
+            msg.acceptMax = req.proposalNum;
+            msg.acceptVal = req.val;
+            msg.prepareMax = req.proposalNum;
+            resp.ack = true;
         }
         else{
-            rsp.ack = false;
+            resp.ack = false;
         }
-        this.mutex.unlock();
-        return rsp;
+        return resp;
     }
 
     public Response Decide(Request req){
         // your code here
-    	this.mutex.lock();
-        if(!this.map.containsKey(req.seq)){
-            Instance ins = new Instance();
-            this.map.put(req.seq, ins);
-        }
-        Instance ins = this.map.get(req.seq);
+    	checkMap(req.seq);
+        Message msg = this.map.get(req.seq);
 
-        ins.v_accept = req.val;
-        ins.max_prepare = req.proposalNum;
-        ins.max_accept = req.proposalNum;
-        ins.state = State.Decided;
+        msg.acceptVal = req.val;
+        msg.prepareMax = req.proposalNum;
+        msg.acceptMax = req.proposalNum;
+        msg.state = State.Decided;
 
         this.done[req.me] = req.done;
 
         Response rsp = new Response();
-        this.mutex.unlock();
         return rsp;
 
     }
@@ -346,15 +330,10 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Done(int seq) {
         // Your code here
-    	this.mutex.lock();
-        try {
             if (seq > this.done[this.me]) {
                 this.done[this.me] = seq;
             }
-        }
-        finally {
-            this.mutex.unlock();
-        }
+
     }
 
 
@@ -365,18 +344,13 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Max(){
         // Your code here
-    	this.mutex.lock();
-    	try{
-    		int max = 0;
-	        for(int key: map.keySet()) {
-	            if(key > max)
-	                max = key;
-	        }
-	        return max;
-    	}
-    	finally {
-            this.mutex.unlock();
-    	}
+		int max = 0;
+        for(int key: map.keySet()) {
+            if(key > max)
+                max = key;
+        }
+        return max;
+
     }
 
     /**
@@ -409,30 +383,15 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Min(){
         // Your code here
-    	this.mutex.lock();
-        try{
-            int min = this.done[this.me];
-            for(int i = 0; i < this.done.length; i++){
-                if(this.done[i] < min){
-                    min = this.done[i];
-                }
-            }
 
-            for(Iterator<Map.Entry<Integer, Instance>> it = this.map.entrySet().iterator(); it.hasNext();){
-                Map.Entry<Integer, Instance> entry = it.next();
-                if(entry.getKey() > min){
-                    continue;
-                }
-                if(entry.getValue().state != State.Decided){
-                    continue;
-                }
-                it.remove();
+        int min = Integer.MAX_VALUE;
+        for(int doneVal : done){
+            if(doneVal < min){
+                min = doneVal;
             }
-
-            return min + 1;
-        } finally {
-            this.mutex.unlock();
         }
+
+        return min + 1;
     }
     
     /** Returns the majority value
@@ -452,19 +411,15 @@ public class Paxos implements PaxosRMI, Runnable{
         // Your code here
     	if(seq < Min())
     		return new retStatus(State.Forgotten, null);
-    	
-    	this.mutex.lock();
-        try{
-            if(!this.map.containsKey(seq)){
-                return new retStatus(State.Pending, null);
-            }
-            else{
-                Instance ins = this.map.get(seq);
-                return new retStatus(ins.state, ins.v_accept);
-            }
-        } finally {
-            this.mutex.unlock();
+
+        if(!this.map.containsKey(seq)){
+            return new retStatus(State.Pending, null);
         }
+        else{
+            Message msg = this.map.get(seq);
+            return new retStatus(msg.state, msg.acceptVal);
+        }
+
     }
 
     /**
@@ -479,23 +434,8 @@ public class Paxos implements PaxosRMI, Runnable{
             this.v = v;
         }
     }
-    
-    private class Instance {
 
-        int max_prepare; // highest prepare number seen
-        int max_accept; // highest accept seen
-        State state;
-        Object v_accept; //highest-numbered proposal accepted
-
-        public Instance(){
-            this.max_prepare = Integer.MIN_VALUE;
-            this.max_accept = Integer.MIN_VALUE;
-            this.state = State.Pending;
-            this.v_accept = null;
-        }
-
-    }
-
+    //DO NO MODIFY CODE BELOW
     /**
      * Tell the peer to shut itself down.
      * For testing.
@@ -523,6 +463,5 @@ public class Paxos implements PaxosRMI, Runnable{
     public boolean isunreliable(){
         return this.unreliable.get();
     }
-
 
 }
