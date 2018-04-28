@@ -2,6 +2,7 @@ package paxos;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -22,12 +23,16 @@ public class Paxos implements PaxosRMI, Runnable{
     AtomicBoolean unreliable;// for testing
 
     // Your data here
-    Map<Integer, Instance> map = new ConcurrentHashMap<>();
+    Map<Integer, Instance> map = new ConcurrentHashMap<Integer, Instance>();
     int seq;
-    int value;
+    Object value;
     int[] dones;
-   
+    int npaxos;
 
+    private class Instance{
+    	int seq;
+    	
+    }
     /**
      * Call the constructor to create a Paxos peer.
      * The hostnames of all the Paxos peers (including this one)
@@ -43,7 +48,12 @@ public class Paxos implements PaxosRMI, Runnable{
         this.unreliable = new AtomicBoolean(false);
 
         // Your initialization code here
-
+        this.npaxos = peers.length;
+        this.seq = -1;
+        this.value = null;
+        this.dones = new int[npaxos];
+        for(int i = 0; i < npaxos; i++)
+        	dones[i] = -1;
 
         // register peers, do not modify this part
         try{
@@ -111,6 +121,7 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Start(int seq, Object value){
         // Your code here
+    	
     }
 
     @Override
