@@ -2,10 +2,8 @@ package paxos;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.*;
 
 /**
  * This class is the main class you need to implement paxos instances.
@@ -24,13 +22,11 @@ public class Paxos implements PaxosRMI, Runnable{
     AtomicBoolean unreliable;// for testing
 
     // Your data here
-    Map<Integer, Message> map;			//Map<seq #, Instance> to store proposals
+    Map<Integer, Instance> map = new ConcurrentHashMap<>();
     int seq;
-    Object value;
-    int numPaxos;
-    int[] done;
-
-    
+    int value;
+    int[] dones;
+   
 
     /**
      * Call the constructor to create a Paxos peer.
@@ -47,13 +43,7 @@ public class Paxos implements PaxosRMI, Runnable{
         this.unreliable = new AtomicBoolean(false);
 
         // Your initialization code here
-        this.map = new ConcurrentHashMap<>();
-        this.numPaxos = peers.length;
-        this.done = new int[this.numPaxos];
-        for(int i = 0; i < this.done.length; i++){
-            this.done[i] = -1;
-        }
-        
+
 
         // register peers, do not modify this part
         try{
@@ -120,206 +110,28 @@ public class Paxos implements PaxosRMI, Runnable{
      * is reached.
      */
     public void Start(int seq, Object value){
-    	this.seq = seq;
-    	this.value = value;
-    	Thread t = new Thread(this);
-        t.start();
+        // Your code here
     }
 
     @Override
     public void run(){
         //Your code here
-    	if(this.seq < this.Min()) return;
-    	
-    	while(true) {
-    		Response resp = sendPrepare(seq, value);
-    		boolean OK = false;
-    		if(resp.ack) {
-    			OK = this.sendAccept(seq, resp.num, resp.value);		// will return whether value is the majority
-    		}
-    		if(OK) {													// if majority is true,
-    			this.sendDecide(seq, resp.num, resp.value);				// send decision to all
-                break;
-    		}
-    		retStatus status = this.Status(seq);
-            if(status.state == State.Decided){
-                break;
-            }
-    	}
-        
-    }
-    
-    private class Message {
-
-        int prepareMax;
-        int acceptMax;
-        State state;
-        Object acceptVal;
-
-        public Message(){
-            this.prepareMax = Integer.MIN_VALUE;
-            this.acceptMax = Integer.MIN_VALUE;
-            this.state = State.Pending;
-            this.acceptVal = null;
-        }
-    }
-    
-    public Response sendPrepare(int seq, Object value){
-    	checkMap(seq);
-    	Message msg = map.get(seq);
-    	int proposalNum;
-    	
-    	if(msg.prepareMax == Integer.MIN_VALUE) proposalNum = this.me + 1;
-    	else
-    		proposalNum = (msg.prepareMax/numPaxos + 1) * numPaxos + this.me + 1;	// Generate a proposal number(?)
-    	
-    	
-    	Request req = new Request(seq, proposalNum, value);
-    	int replyNum = -1;
-    	Object replyVal = value;
-    	int count = 0;
-    	
-    	for(int i = 0; i < numPaxos; i++) {			// Send a "Prepare" proposal to accepters
-    		Response resp;								// receive a response back from the accepters
-    		if(i == this.me) {
-    			resp = this.Prepare(req);
-    		}
-    		else {
-    			resp = this.Call("Prepare", req, i);
-    		}
-    		if(resp != null && resp.ack) {				// Count up the amount of acknowledged responses
-    			count ++;
-    			if(resp.num > replyNum) {
-    				replyNum = resp.num;
-    				replyVal = resp.value;
-    			}
-    		}
-    	}
-    	
-    	Response resp = new Response();
-        if(count >= this.majority()){
-            resp.ack = true;
-            resp.num = proposalNum;
-            resp.value = replyVal;
-        }
-        
-        return resp;
     }
 
-    public boolean sendAccept(int seq, int proposalNum, Object value) {
-    	int count = 0;
-    	for(int i = 0; i < numPaxos; i++){
-            Response resp;
-            if(i == this.me)
-                resp = Accept(new Request(seq, proposalNum, value));
-            
-            else
-                resp = this.Call("Accept", new Request(seq, proposalNum, value), i);
-            
-            if(resp != null && resp.ack)
-                count++;
-        }
-        return count >= this.majority();
-    }
-    
-    public void sendDecide(int seq, int proposalNum, Object value) {
-        Message msg = this.map.get(seq);
-        msg.acceptVal = value;
-        msg.state = State.Decided;
-        msg.acceptMax = proposalNum;
-        msg.prepareMax = proposalNum;
-
-        for(int i = 0; i < this.peers.length; i++){
-            Response rsp;
-            if(i != this.me){
-            	int doneVal = this.done[this.me];
-                rsp = this.Call("Decide", new Request(seq, proposalNum, value, doneVal, this.me), i);
-            }
-        }
-
-    }
-    
-    
-    private void checkMap(int seq) {
-    	if(!map.containsKey(seq)) {
-    		Message msg = new Message();
-    		map.put(seq, msg);
-    	}
-    }
-    
     // RMI handler
     public Response Prepare(Request req){
         // your code here
-    	/**
-		acceptor's prepare(n) handler:
-		  if n > n_p
-		    n_p = n
-		    reply prepare_ok(n, n_a, v_a)
-		  else
-		    reply prepare_reject
-    	 */
-    	checkMap(req.seq);
-    	Message msg = map.get(req.seq);
-    	
-    	Response resp = new Response();
-    	if(req.proposalNum > msg.prepareMax){
-            // update proposer number
-            msg.prepareMax = req.proposalNum;
-            resp.ack = true;
-            resp.num = msg.acceptMax;
-            resp.value = msg.acceptVal;
-        }
-        else{
-            resp.ack = false;
-        }
-        return resp;
+    	return null;
     }
 
     public Response Accept(Request req){
         // your code here
-    	// n_p (highest prepare seen)
-    	// n_a, v_a (highest accept seen)
-    	/**
-    	acceptor's accept(n, v) handler:
-		  if n >= n_p
-		    n_p = n
-		    n_a = n
-		    v_a = v
-		    reply accept_ok(n)
-		  else
-		    reply accept_reject
-    	 */
-    	checkMap(req.seq);
-        Message msg = this.map.get(req.seq);
-        Response resp = new Response();
-
-        if(req.proposalNum >= msg.prepareMax){
-            msg.acceptMax = req.proposalNum;
-            msg.acceptVal = req.val;
-            msg.prepareMax = req.proposalNum;
-            resp.ack = true;
-        }
-        else{
-            resp.ack = false;
-        }
-        return resp;
+    	return null;
     }
 
     public Response Decide(Request req){
         // your code here
-    	checkMap(req.seq);
-        Message msg = this.map.get(req.seq);
-
-        msg.acceptVal = req.val;
-        msg.prepareMax = req.proposalNum;
-        msg.acceptMax = req.proposalNum;
-        msg.state = State.Decided;
-
-        this.done[req.me] = req.done;
-
-        Response rsp = new Response();
-        return rsp;
-
+    	return null;
     }
 
     /**
@@ -330,10 +142,6 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Done(int seq) {
         // Your code here
-            if (seq > this.done[this.me]) {
-                this.done[this.me] = seq;
-            }
-
     }
 
 
@@ -344,13 +152,7 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Max(){
         // Your code here
-		int max = 0;
-        for(int key: map.keySet()) {
-            if(key > max)
-                max = key;
-        }
-        return max;
-
+    	return -1;
     }
 
     /**
@@ -383,22 +185,10 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Min(){
         // Your code here
-
-        int min = Integer.MAX_VALUE;
-        for(int doneVal : done){
-            if(doneVal < min){
-                min = doneVal;
-            }
-        }
-
-        return min + 1;
+    	return -1;
     }
-    
-    /** Returns the majority value
-     */
-    private int majority(){
-        return numPaxos/2 + 1;
-    }
+
+
 
     /**
      * the application wants to know whether this
@@ -409,17 +199,7 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public retStatus Status(int seq){
         // Your code here
-    	if(seq < Min())
-    		return new retStatus(State.Forgotten, null);
-
-        if(!this.map.containsKey(seq)){
-            return new retStatus(State.Pending, null);
-        }
-        else{
-            Message msg = this.map.get(seq);
-            return new retStatus(msg.state, msg.acceptVal);
-        }
-
+    	return null;
     }
 
     /**
@@ -435,7 +215,6 @@ public class Paxos implements PaxosRMI, Runnable{
         }
     }
 
-    //DO NO MODIFY CODE BELOW
     /**
      * Tell the peer to shut itself down.
      * For testing.
@@ -463,5 +242,6 @@ public class Paxos implements PaxosRMI, Runnable{
     public boolean isunreliable(){
         return this.unreliable.get();
     }
+
 
 }
