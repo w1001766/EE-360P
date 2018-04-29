@@ -31,4 +31,24 @@ public class Response implements Serializable {
     	this.proposalNum = num;
     	this.value = val;
     }
+
+    @Override
+    public String toString() {
+        String valStr;
+        try {
+            valStr = (String)this.value;
+        } catch (ClassCastException e) {
+            valStr = Integer.toString((int)this.value);
+        }
+        String str = (
+                "Response:\n" +
+                        "\tseq: " + this.seq + "\n" +
+                        "\tproposalAccepted: " + this.proposalAccepted + "\n" +
+                        "\tacceptAccepted: " + this.acceptAccepted + "\n" +
+                        "\tmajorityAccepted: " + this.majorityAccepted + "\n" +
+                        "\tvalue: " + valStr + "\n" +
+                        "\tproposalNum: " + this.proposalNum + "\n"
+        );
+        return str;
+    }
 }

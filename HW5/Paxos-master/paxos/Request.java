@@ -40,12 +40,19 @@ public class Request implements Serializable {
 
     @Override
     public String toString() {
+        String valStr;
+        try {
+            valStr = (String)this.val;
+        } catch (ClassCastException e) {
+            valStr = Integer.toString((int)this.val);
+        }
         String str = (
                     "Request values:\n" +
                             "\tseq: " + this.seq + "\n" +
                             "\tproposalNum: " + this.proposalNum + "\n" +
                             "\tdone: " + this.done + "\n" +
-                            "\tme: " + this.me + "\n"
+                            "\tme: " + this.me + "\n" +
+                            "\tval: " + valStr + "\n"
                 );
         return str;
     }
