@@ -234,7 +234,7 @@ public class Paxos implements PaxosRMI, Runnable{
         // Send rejection message otherwise
         } else {
             proposalResponse = new Response();
-            proposalResponse.proposalAccepted = false;
+            //proposalResponse.proposalAccepted = false;	// We don't really need this because the constructor defaults to false
             proposalResponse.proposalNum = targetInstance.highestProposal;  //@TODO: ??
         }
 
@@ -246,8 +246,27 @@ public class Paxos implements PaxosRMI, Runnable{
     }
 
     public Response Accept(Request req) {
-        // your code here
-        return null;
+    	Response acceptorResponse;
+    	Instance targetInstance = this.getInstance(seq);
+    	
+    	// from pseudo code (acceptor's accept handler)
+    	// Similar to Prepare, except the condition below is >= instead of = and we update highest accept/proposal values
+    	if(req.proposalNum >= targetInstance.highestProposal) {
+    		targetInstance.highestProposal = req.proposalNum;
+    		targetInstance.highestAccepted = req.proposalNum;
+    		targetInstance.value = req.val;
+    		acceptorResponse = new Response(
+    				req.proposalNum,
+    				targetInstance.highestAccepted,
+    				targetInstance.value
+    		);
+    		acceptorResponse.acceptAccepted = true;
+    	}
+    	else {
+    		acceptorResponse = new Response();
+    		
+    	}
+    	return acceptorResponse;
     }
 
     public Response sendDecide(Request decideRequest) {
@@ -255,7 +274,7 @@ public class Paxos implements PaxosRMI, Runnable{
     }
 
     public Response Decide(Request req){
-        // your code here
+        
     	return null;
     }
 
@@ -276,8 +295,12 @@ public class Paxos implements PaxosRMI, Runnable{
      * this peer.
      */
     public int Max(){
-        // Your code here
-    	return -1;
+        // Simply iterate through the keys to get the max seq number
+    	int max = Integer.MIN_VALUE;
+    	for(int key : instances.keySet())
+    		if(key > max)
+    			max = key;
+    	return max;
     }
 
     /**

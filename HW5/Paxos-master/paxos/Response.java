@@ -11,6 +11,7 @@ public class Response implements Serializable {
     // your data here
     public int seq;
     public boolean proposalAccepted = false;
+    public boolean acceptAccepted = false;
     public boolean majorityAccepted = false;
     public int num;
     public Object value;
@@ -23,6 +24,7 @@ public class Response implements Serializable {
     	this.num = Integer.MIN_VALUE;
     	this.value = null;
     	this.proposalAccepted = false;
+    	this.acceptAccepted = false;
     }
     
     public Response(int seq, int num, Object val) {
