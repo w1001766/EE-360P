@@ -36,9 +36,32 @@ public class Paxos implements PaxosRMI, Runnable{
     Object acceptedValue;
 
     private class Instance{
-    	int seq;
+    	
+    	int highestProposal;	// n_p
+    	int highestAccepted;	// n_a
+    	State state;
+    	Object value;			// v_a
+    	
+    	public Instance() {
+    		highestProposal = Integer.MIN_VALUE;
+    		highestAccepted = Integer.MIN_VALUE;
+    		state = State.Pending;
+    		value = null;
+    	}
+    	
     	
     }
+    
+    // This method retrieves the instance class associated with a specific sequence
+    // in order to run paxos concurrently.
+    private Instance getInstance(int seq) {
+    	if(!map.containsKey(seq)) {
+    		Instance instance = new Instance();
+    		map.put(seq, instance);
+    	}
+    	return map.get(seq);
+    }
+    
     /**
      * Call the constructor to create a Paxos peer.
      * The hostnames of all the Paxos peers (including this one)
@@ -163,6 +186,7 @@ public class Paxos implements PaxosRMI, Runnable{
     }
 
     public Response sendProposal(Request prepareRequest) {
+    	Instance instance = this.getInstance(prepareRequest.seq);
         int numAccepted = 0;
         for (int i=0; i < this.peers.length; ++i) {
             Response prepareResponse;
