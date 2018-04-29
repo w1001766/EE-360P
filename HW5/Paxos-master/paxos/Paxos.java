@@ -22,18 +22,16 @@ public class Paxos implements PaxosRMI, Runnable{
     AtomicBoolean dead;// for testing
     AtomicBoolean unreliable;// for testing
 
-    // Your data here
-    Map<Integer, Instance> map = new ConcurrentHashMap<Integer, Instance>();
+    // Map<seq, Paxos Instance>
+    Map<Integer, Instance> instances = new ConcurrentHashMap<Integer, Instance>();
 
     int seq;
     int[] dones;
     int npaxos;
     int defaultProposalNum = 0;
-    int highestProposalSeen = Integer.MIN_VALUE;
 
     State state = State.Pending;
     Object defaultValue;
-    Object acceptedValue;
 
     private class Instance{
     	
@@ -55,11 +53,11 @@ public class Paxos implements PaxosRMI, Runnable{
     // This method retrieves the instance class associated with a specific sequence
     // in order to run paxos concurrently.
     private Instance getInstance(int seq) {
-    	if(!map.containsKey(seq)) {
+    	if(!instances.containsKey(seq)) {
     		Instance instance = new Instance();
-    		map.put(seq, instance);
+    		instances.put(seq, instance);
     	}
-    	return map.get(seq);
+    	return instances.get(seq);
     }
     
     /**
@@ -159,18 +157,12 @@ public class Paxos implements PaxosRMI, Runnable{
 
     @Override
     public void run(){
-
         /* While the Paxos instance has not decided on an entity */
-        while (this.state != State.Decided) {
+        while (this.getInstance(this.seq).state != State.Decided) {
             int proposalNum = this.defaultProposalNum;
 
             // Propose step
-            Response proposalResponse = sendProposal(new Request(
-                        this.seq,
-                        this.defaultProposalNum,
-                        this.defaultValue
-                    )
-            );
+            Response proposalResponse = sendProposal(this.seq, this.defaultValue);
 
             // Accept step
             if (proposalResponse.majorityAccepted) {
@@ -185,9 +177,16 @@ public class Paxos implements PaxosRMI, Runnable{
         }
     }
 
-    public Response sendProposal(Request prepareRequest) {
-    	Instance instance = this.getInstance(prepareRequest.seq);
+    public Response sendProposal(int seq, Object value) {
+    	Instance instance = this.getInstance(seq);
         int numAccepted = 0;
+    	Request prepareRequest = new Request(
+    	        seq,
+                instance.highestProposal == Integer.MIN_VALUE ?
+                        this.me+1 : (instance.highestProposal / this.npaxos+1) * this.npaxos + this.me+1,
+                value
+        );
+
         for (int i=0; i < this.peers.length; ++i) {
             Response prepareResponse;
 
@@ -202,39 +201,41 @@ public class Paxos implements PaxosRMI, Runnable{
             // We receive a response and the peer we sent to accepts the proposal
             if (null != prepareResponse && prepareResponse.proposalAccepted) {
                 ++numAccepted;
-            // We receive a response but the peer rejects our proposal
+            }
+/*            // We receive a response but the peer rejects our proposal
             } else if (null != prepareResponse && !prepareResponse.proposalAccepted) {
                 // Update our default proposal num to reattempt
-                this.defaultProposalNum = this.defaultProposalNum < prepareResponse.proposalNum ?
+                instance.highestProposal = this.defaultProposalNum < prepareResponse.proposalNum ?
                         prepareResponse.proposalNum+1 : this.defaultProposalNum;
-            }
+            }*/
 
-            Response proposalResponse = new Response();
-            proposalResponse.majorityAccepted = numAccepted >= this.peers.length/2 + 1;
         }
 
-
+        Response proposalResponse = new Response();
+        proposalResponse.majorityAccepted = numAccepted >= this.peers.length/2 + 1;
         return null;
     }
 
     public Response Prepare(Request req){
         Response proposalResponse;
+        Instance targetInstance = this.getInstance(req.seq);
 
         // Send the acceptance message if the received proposal number is greater than any this instance has seen
-        if (req.proposalNum > this.highestProposalSeen) {
-            this.highestProposalSeen = req.proposalNum;
-            this.acceptedValue = null == this.acceptedValue ? req.val : this.acceptedValue;
+        if (req.proposalNum > targetInstance.highestProposal) {
+            targetInstance.highestProposal = req.proposalNum;
+            // @TODO: this here or during accept?
+            targetInstance.value = targetInstance.value == null ? req.val : targetInstance.value;
             proposalResponse =  new Response(
                     req.proposalNum,
-                    this.highestProposalSeen,
-                    this.acceptedValue
+                    targetInstance.highestProposal,
+                    targetInstance.value
             );
             proposalResponse.proposalAccepted = true;
         // Send rejection message otherwise
         } else {
             proposalResponse = new Response();
             proposalResponse.proposalAccepted = false;
-            proposalResponse.proposalNum = this.highestProposalSeen;
+            proposalResponse.proposalNum = targetInstance.highestProposal;  //@TODO: ??
         }
 
     	return proposalResponse;
