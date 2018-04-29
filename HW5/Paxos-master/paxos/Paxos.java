@@ -5,7 +5,7 @@ import java.rmi.registry.Registry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-
+import java.util.*;
 /**
  * This class is the main class you need to implement paxos instances.
  */
@@ -24,10 +24,16 @@ public class Paxos implements PaxosRMI, Runnable{
 
     // Your data here
     Map<Integer, Instance> map = new ConcurrentHashMap<Integer, Instance>();
+
     int seq;
-    Object value;
     int[] dones;
     int npaxos;
+    int defaultProposalNum = 0;
+    int highestProposalSeen = Integer.MIN_VALUE;
+
+    State state = State.Pending;
+    Object defaultValue;
+    Object acceptedValue;
 
     private class Instance{
     	int seq;
@@ -50,7 +56,7 @@ public class Paxos implements PaxosRMI, Runnable{
         // Your initialization code here
         this.npaxos = peers.length;
         this.seq = -1;
-        this.value = null;
+        this.defaultValue = null;
         this.dones = new int[npaxos];
         for(int i = 0; i < npaxos; i++)
         	dones[i] = -1;
@@ -121,23 +127,106 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Start(int seq, Object value){
         // Your code here
-    	
+    	this.seq = seq;
+    	this.defaultValue = value;
+
+    	Thread t = new Thread(this);
+    	t.start();
     }
 
     @Override
     public void run(){
-        //Your code here
+
+        /* While the Paxos instance has not decided on an entity */
+        while (this.state != State.Decided) {
+            int proposalNum = this.defaultProposalNum;
+
+            // Propose step
+            Response proposalResponse = sendProposal(new Request(
+                        this.seq,
+                        this.defaultProposalNum,
+                        this.defaultValue
+                    )
+            );
+
+            // Accept step
+            if (proposalResponse.majorityAccepted) {
+                Response acceptanceResponse = sendAccept(new Request());
+
+                // Decide step
+                if (acceptanceResponse.majorityAccepted) {
+                    sendDecide(new Request());
+                }
+            }
+
+        }
     }
 
-    // RMI handler
+    public Response sendProposal(Request prepareRequest) {
+        int numAccepted = 0;
+        for (int i=0; i < this.peers.length; ++i) {
+            Response prepareResponse;
+
+            // Proposal to self
+            if (this.me == i) {
+                prepareResponse = this.Prepare(prepareRequest);
+            // Proposal to peers
+            } else {
+                prepareResponse = this.Call("Prepare", prepareRequest, i);
+            }
+
+            // We receive a response and the peer we sent to accepts the proposal
+            if (null != prepareResponse && prepareResponse.proposalAccepted) {
+                ++numAccepted;
+            // We receive a response but the peer rejects our proposal
+            } else if (null != prepareResponse && !prepareResponse.proposalAccepted) {
+                // Update our default proposal num to reattempt
+                this.defaultProposalNum = this.defaultProposalNum < prepareResponse.proposalNum ?
+                        prepareResponse.proposalNum+1 : this.defaultProposalNum;
+            }
+
+            Response proposalResponse = new Response();
+            proposalResponse.majorityAccepted = numAccepted >= this.peers.length/2 + 1;
+        }
+
+
+        return null;
+    }
+
     public Response Prepare(Request req){
-        // your code here
-    	return null;
+        Response proposalResponse;
+
+        // Send the acceptance message if the received proposal number is greater than any this instance has seen
+        if (req.proposalNum > this.highestProposalSeen) {
+            this.highestProposalSeen = req.proposalNum;
+            this.acceptedValue = null == this.acceptedValue ? req.val : this.acceptedValue;
+            proposalResponse =  new Response(
+                    req.proposalNum,
+                    this.highestProposalSeen,
+                    this.acceptedValue
+            );
+            proposalResponse.proposalAccepted = true;
+        // Send rejection message otherwise
+        } else {
+            proposalResponse = new Response();
+            proposalResponse.proposalAccepted = false;
+            proposalResponse.proposalNum = this.highestProposalSeen;
+        }
+
+    	return proposalResponse;
     }
 
-    public Response Accept(Request req){
+    public Response sendAccept(Request acceptRequest) {
+        return null;
+    }
+
+    public Response Accept(Request req) {
         // your code here
-    	return null;
+        return null;
+    }
+
+    public Response sendDecide(Request decideRequest) {
+        return null;
     }
 
     public Response Decide(Request req){

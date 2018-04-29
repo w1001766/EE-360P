@@ -10,9 +10,11 @@ public class Response implements Serializable {
     static final long serialVersionUID=2L;
     // your data here
     public int seq;
-    public boolean ack;
+    public boolean proposalAccepted = false;
+    public boolean majorityAccepted = false;
     public int num;
     public Object value;
+    public int proposalNum = Integer.MIN_VALUE;
 
 
     // Your constructor and methods here
@@ -20,7 +22,7 @@ public class Response implements Serializable {
     	this.seq = -1;
     	this.num = Integer.MIN_VALUE;
     	this.value = null;
-    	this.ack = false;
+    	this.proposalAccepted = false;
     }
     
     public Response(int seq, int num, Object val) {
@@ -28,5 +30,4 @@ public class Response implements Serializable {
     	this.num = num;
     	this.value = val;
     }
-    
 }
