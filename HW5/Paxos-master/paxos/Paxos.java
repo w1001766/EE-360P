@@ -166,30 +166,46 @@ public class Paxos implements PaxosRMI, Runnable{
 
             // Accept step
             if (proposalResponse.majorityAccepted) {
-                Response acceptanceResponse = sendAccept(new Request());
+                boolean consensus = sendAccept(new Request(this.seq, proposalResponse.proposalNum, proposalResponse.value));
 
                 // Decide step
-                if (acceptanceResponse.majorityAccepted) {
-                    sendDecide(new Request());
+                if (consensus) {
+                    sendDecide(new Request(this.seq, proposalResponse.proposalNum, proposalResponse.value));
                 }
             }
 
         }
     }
 
-    public Response sendProposal(int seq, Object value) {
-    	Instance instance = this.getInstance(seq);
-        int numAccepted = 0;
-    	Request prepareRequest = new Request(
+    Request generatePrepareRequest(int seq, Object value, Instance instance) {
+    	return new Request(
     	        seq,
                 instance.highestProposal == Integer.MIN_VALUE ?
                         this.me+1 : (instance.highestProposal / this.npaxos+1) * this.npaxos + this.me+1,
                 value
         );
+    }
+    
+    
+    public Response sendProposal(int seq, Object value) {
+    	Instance instance = this.getInstance(seq);
+        int numAccepted = 0;
+        Object vPrime = this.defaultValue;			// proposer's default value
+        int n_a = Integer.MIN_VALUE;				// highest n_a (to be calculated), see line 6 from pseudo code
+        
+        Request prepareRequest = generatePrepareRequest(seq, value, instance);
+        int generatedProposalNum = prepareRequest.proposalNum;
+//    	Request prepareRequest = new Request(
+//    	        seq,
+//                instance.highestProposal == Integer.MIN_VALUE ?
+//                        this.me+1 : (instance.highestProposal / this.npaxos+1) * this.npaxos + this.me+1,
+//                value
+//        );
 
+    	// Iterate through peers to send prepare message via RMI, including self (local call)
         for (int i=0; i < this.peers.length; ++i) {
             Response prepareResponse;
-
+            
             // Proposal to self
             if (this.me == i) {
                 prepareResponse = this.Prepare(prepareRequest);
@@ -201,7 +217,12 @@ public class Paxos implements PaxosRMI, Runnable{
             // We receive a response and the peer we sent to accepts the proposal
             if (null != prepareResponse && prepareResponse.proposalAccepted) {
                 ++numAccepted;
+                if(prepareResponse.proposalNum > n_a) {
+                	n_a = prepareResponse.proposalNum;
+                	vPrime = prepareResponse.value;
+                }
             }
+            
 /*            // We receive a response but the peer rejects our proposal
             } else if (null != prepareResponse && !prepareResponse.proposalAccepted) {
                 // Update our default proposal num to reattempt
@@ -213,7 +234,15 @@ public class Paxos implements PaxosRMI, Runnable{
 
         Response proposalResponse = new Response();
         proposalResponse.majorityAccepted = numAccepted >= this.peers.length/2 + 1;
-        return null;
+        
+        // Alex's "jank" code
+        if(numAccepted >= this.npaxos/2 + 1) {
+        	proposalResponse.majorityAccepted = true;
+        	proposalResponse.proposalNum = generatedProposalNum;			// used to send accept(n, v')
+        	proposalResponse.value = vPrime;
+        	
+        }
+        return proposalResponse;
     }
 
     public Response Prepare(Request req){
@@ -226,7 +255,7 @@ public class Paxos implements PaxosRMI, Runnable{
             // @TODO: this here or during accept?
             targetInstance.value = targetInstance.value == null ? req.val : targetInstance.value;
             proposalResponse =  new Response(
-                    req.proposalNum,
+                    req.seq,
                     targetInstance.highestProposal,
                     targetInstance.value
             );
@@ -241,8 +270,26 @@ public class Paxos implements PaxosRMI, Runnable{
     	return proposalResponse;
     }
 
-    public Response sendAccept(Request acceptRequest) {
-        return null;
+    public boolean sendAccept(Request acceptRequest) {
+    	Instance instance = this.getInstance(acceptRequest.seq);
+    	int proposalNum = instance.highestProposal;
+    	Object value = instance.value;
+    	
+    	int numAccepted = 0;
+    	for(int i = 0; i < this.npaxos; ++i) {
+    		Response acceptResponse;
+    		if(i == this.me) {
+    			acceptResponse = this.Accept(acceptRequest);
+    		}
+    		else {
+    			acceptResponse = this.Call("Accept", acceptRequest, i);
+    		}
+    		
+    		if(null != acceptResponse && acceptResponse.acceptAccepted) {
+    			++numAccepted;
+    		}
+    	}
+        return numAccepted >= this.npaxos/2 + 1;
     }
 
     public Response Accept(Request req) {
@@ -269,7 +316,14 @@ public class Paxos implements PaxosRMI, Runnable{
     	return acceptorResponse;
     }
 
+    
+    // Need to look into this more!
     public Response sendDecide(Request decideRequest) {
+        Instance instance = this.getInstance(seq);
+        int proposalNum = instance.highestProposal;
+        Object value = instance.value;
+        instance.state = State.Decided;
+        
         return null;
     }
 
@@ -285,7 +339,9 @@ public class Paxos implements PaxosRMI, Runnable{
      * see the comments for Min() for more explanation.
      */
     public void Done(int seq) {
-        // Your code here
+        // Any value <= seq should be forgotten!
+    	if(seq > this.dones[this.me])
+    		this.dones[this.me] = seq;
     }
 
 
@@ -332,8 +388,26 @@ public class Paxos implements PaxosRMI, Runnable{
      * instances.
      */
     public int Min(){
-        // Your code here
-    	return -1;
+        // retrieve min seq value
+    	int min = this.dones[this.me];
+    	
+    	// search through all peer values to find the min seq from the dones array
+    	for(int i : dones){
+    		if(min > i)
+    			min = i;
+    	}
+    	
+    	// all sequence values that are less than the min or finished deciding should be forgotten/deleted
+    	for(int seq: instances.keySet()) {
+    		if(seq < min)
+    			instances.remove(seq);
+    		
+    		if(instances.get(seq).state == State.Decided)
+    			instances.remove(seq);
+    	}
+    	
+    	//just following the instructions above lol
+    	return min + 1;
     }
 
 
@@ -346,8 +420,19 @@ public class Paxos implements PaxosRMI, Runnable{
      * it should not contact other Paxos peers.
      */
     public retStatus Status(int seq){
-        // Your code here
-    	return null;
+        // Any sequence less than the Min value should've been removed and forgotten to save memory (from above)
+    	if(seq < this.Min())
+    		return new retStatus(State.Forgotten, null);
+    	
+    	// Check if the sequence exists in the instances map
+    	if(this.instances.containsKey(seq)) {
+    		Instance targetInstance = instances.get(seq);
+    		return new retStatus(targetInstance.state, targetInstance.value);
+    	}
+    	else {
+    		// sequence number doesn't exist yet, so state is pending.
+    		return new retStatus(State.Pending, null);
+    	}
     }
 
     /**

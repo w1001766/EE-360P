@@ -13,7 +13,6 @@ public class Response implements Serializable {
     public boolean proposalAccepted = false;
     public boolean acceptAccepted = false;
     public boolean majorityAccepted = false;
-    public int num;
     public Object value;
     public int proposalNum = Integer.MIN_VALUE;
 
@@ -21,7 +20,7 @@ public class Response implements Serializable {
     // Your constructor and methods here
     public Response() {
     	this.seq = -1;
-    	this.num = Integer.MIN_VALUE;
+    	this.proposalNum = Integer.MIN_VALUE;
     	this.value = null;
     	this.proposalAccepted = false;
     	this.acceptAccepted = false;
@@ -29,7 +28,7 @@ public class Response implements Serializable {
     
     public Response(int seq, int num, Object val) {
     	this.seq = seq;
-    	this.num = num;
+    	this.proposalNum = num;
     	this.value = val;
     }
 }
