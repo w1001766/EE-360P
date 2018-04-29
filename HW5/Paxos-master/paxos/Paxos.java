@@ -24,6 +24,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     // Map<seq, Paxos Instance>
     Map<Integer, Instance> instances = new ConcurrentHashMap<Integer, Instance>();
+    Map<Integer, Object> decided = new ConcurrentHashMap<Integer, Object>();
 
     int seq;
     int[] dones;
@@ -318,18 +319,34 @@ public class Paxos implements PaxosRMI, Runnable{
 
     
     // Need to look into this more!
-    public Response sendDecide(Request decideRequest) {
-        Instance instance = this.getInstance(seq);
+    public void sendDecide(Request decideRequest) {
+        Instance instance = this.instances.get(decideRequest.seq);		// key should exist
+        
+        // needed for RMI call
         int proposalNum = instance.highestProposal;
         Object value = instance.value;
         instance.state = State.Decided;
         
-        return null;
+        for(int i = 0; i < this.npaxos; ++i) {
+        	Response decideResponse;
+        	if(i != me) {
+        		int done = this.dones[this.me];
+        		decideResponse = this.Call("Decide", new Request(decideRequest.seq, proposalNum, value, done, this.me), i);
+        	}
+        }
     }
 
     public Response Decide(Request req){
+        Instance instance = this.getInstance(req.seq);
         
-    	return null;
+        // Not quite sure what to do here.
+        instance.state = State.Decided;
+        
+        this.dones[req.me] = req.done;
+        Response decideResponse = new Response();
+        
+    	return decideResponse;
+    	
     }
 
     /**
