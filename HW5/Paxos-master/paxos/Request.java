@@ -37,4 +37,16 @@ public class Request implements Serializable {
     	this.done = done;
     	this.me = me;
     }
+
+    @Override
+    public String toString() {
+        String str = (
+                    "Request values:\n" +
+                            "\tseq: " + this.seq + "\n" +
+                            "\tproposalNum: " + this.proposalNum + "\n" +
+                            "\tdone: " + this.done + "\n" +
+                            "\tme: " + this.me + "\n"
+                );
+        return str;
+    }
 }
