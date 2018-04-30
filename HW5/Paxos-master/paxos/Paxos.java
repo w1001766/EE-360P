@@ -27,7 +27,6 @@ public class Paxos implements PaxosRMI, Runnable{
 
     // Map<seq, Paxos Instance>
     Map<Integer, Instance> instances = new ConcurrentHashMap<Integer, Instance>();
-    Map<Integer, Object> defaultVals = new ConcurrentHashMap<Integer, Object>();
 
     int seq;
     int[] dones;
@@ -102,7 +101,6 @@ public class Paxos implements PaxosRMI, Runnable{
 
         // Your initialization code here
         this.npaxos = peers.length;
-        //this.seq = -1;
         this.defaultValue = null;
         this.dones = new int[npaxos];
         for(int i = 0; i < npaxos; i++)
@@ -176,7 +174,6 @@ public class Paxos implements PaxosRMI, Runnable{
 
         this.seq = seq;
     	this.defaultValue = value;
-    	defaultVals.put(seq, value);
 
     	Thread t = new Thread(this);
     	t.start();
@@ -185,11 +182,11 @@ public class Paxos implements PaxosRMI, Runnable{
     @Override
     public void run(){
         int currentSeq = this.seq;
-        Object currentVal = defaultVals.get(currentSeq);
+        Object currentVal = this.defaultValue;
         if(this.seq < this.Min()) return;
 
         /* While the Paxos instance has not decided on an entity */
-        while (this.getInstance(currentSeq).state != State.Decided) {
+        while (true) {
             //int proposalNum = this.defaultProposalNum;
 
             // Propose step
@@ -206,6 +203,8 @@ public class Paxos implements PaxosRMI, Runnable{
                     break;
                 }
             }
+            
+            if(this.Status(currentSeq).state == State.Decided) break;
         }
     }
 
@@ -319,7 +318,7 @@ public class Paxos implements PaxosRMI, Runnable{
     	if(req.proposalNum >= targetInstance.highestProposal) {
     		targetInstance.highestProposal = req.proposalNum;
     		targetInstance.highestAccepted = req.proposalNum;
-    		targetInstance.value = req.val;
+    		//targetInstance.value = req.val;
     		acceptorResponse = new Response(
 //    				req.proposalNum,
 //    				targetInstance.highestAccepted,
@@ -446,15 +445,19 @@ public class Paxos implements PaxosRMI, Runnable{
     		if(min > i)
     			min = i;
     	}
+    	lock.lock();
     	// all sequence values that are less than the min or finished deciding should be forgotten/deleted
-    	for(int seq: instances.keySet()) {
-    		if(seq < min || instances.get(seq).state == State.Decided) {
-                //instances.remove(seq);
+    	for(Iterator<Map.Entry<Integer, Instance>> it = this.instances.entrySet().iterator(); it.hasNext();){
+            Map.Entry<Integer, Instance> entry = it.next();
+            if(entry.getKey() > min){
+                continue;
             }
-    		if(seq > min) continue;
-    		if(instances.get(seq).state != State.Decided) continue;
-    		instances.remove(seq);
-    	}
+            if(entry.getValue().state != State.Decided){
+                continue;
+            }
+            it.remove();
+        }
+    	lock.unlock();
     	//just following the instructions above lol
     	return min + 1;
     }
