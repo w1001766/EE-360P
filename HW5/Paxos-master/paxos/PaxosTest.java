@@ -179,10 +179,10 @@ public class PaxosTest {
         }
 
         pxa[0].Start(0,"00");
-//        pxa[1].Start(1,"11");
-//        pxa[2].Start(2,"22");
-//        pxa[0].Start(6,"66");
-//        pxa[1].Start(7,"77");
+        pxa[1].Start(1,"11");
+        pxa[2].Start(2,"22");
+        pxa[0].Start(6,"66");
+        pxa[1].Start(7,"77");
 
         waitn(pxa, 0, npaxos);
         for(int i = 0; i < npaxos; i++){
