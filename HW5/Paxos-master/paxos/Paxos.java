@@ -484,9 +484,10 @@ public class Paxos implements PaxosRMI, Runnable{
     	}
     	// all sequence values that are less than the min or finished deciding should be forgotten/deleted
     	for(int seq: instances.keySet()) {
-    		if(seq < min || instances.get(seq).state == State.Decided) {
-                //instances.remove(seq);
+    		if(seq >= min || instances.get(seq).state != State.Decided) {
+    		    continue;
             }
+            instances.remove(seq);
     	}
     	//just following the instructions above lol
     	return min + 1;
