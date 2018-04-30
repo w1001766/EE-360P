@@ -173,12 +173,7 @@ public class Paxos implements PaxosRMI, Runnable{
      * is reached.
      */
     public void Start(int seq, Object value){
-        // Your code here
-//        try {
-//            this.mutex.acquire();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+
         this.seq = seq;
     	this.defaultValue = value;
     	defaultVals.put(seq, value);
@@ -191,48 +186,26 @@ public class Paxos implements PaxosRMI, Runnable{
     public void run(){
         int currentSeq = this.seq;
         Object currentVal = defaultVals.get(currentSeq);
-//        this.mutex.release();
-//        System.out.println(this.mutex);
-        
-        //DEBUGGING
-        String valStr;
-        try {
-            valStr = (String)currentVal;
-        } catch (ClassCastException e) {
-            valStr = Integer.toString((int)currentVal);
-        }
-        System.out.println("currentSeq: " + currentSeq + " currentVal: " + valStr);
+        if(this.seq < this.Min()) return;
 
         /* While the Paxos instance has not decided on an entity */
         while (this.getInstance(currentSeq).state != State.Decided) {
-            int proposalNum = this.defaultProposalNum;
+            //int proposalNum = this.defaultProposalNum;
 
             // Propose step
             Response proposalResponse = sendProposal(currentSeq, currentVal);
 
-            System.out.printf("Paxos " + this.me + "proposal response for seq " + currentSeq + " and val " + valStr + ": " + proposalResponse);
+            
             // Accept step
             if (proposalResponse.majorityAccepted) {
-                boolean consensus = sendAcceptRequests(
-                        new Request(
-                                currentSeq,
-                                proposalResponse.proposalNum,
-                                proposalResponse.value
-                        )
-                );
-
+            	Request acceptRequest = new Request(currentSeq, proposalResponse.proposalNum, proposalResponse.value);
+                boolean consensus = sendAcceptRequests(acceptRequest);
                 // Decide step
                 if (consensus) {
-                    sendDecideRequests(
-                            new Request(
-                                    currentSeq,
-                                    proposalResponse.proposalNum,
-                                    proposalResponse.value
-                            )
-                    );
+                    sendDecideRequests(acceptRequest);
+                    break;
                 }
             }
-
         }
     }
 
@@ -247,24 +220,13 @@ public class Paxos implements PaxosRMI, Runnable{
     
     
     public Response sendProposal(int seq, Object value) {
-
-        String objVal;
-        try {
-            objVal = (String)value;
-        } catch (ClassCastException e) {
-            objVal = Integer.toString((int)value);
-        }
-        System.out.println("Paxos " + this.me + " sending proposal for seq " + seq + " for value " + objVal);
-
         Instance instance = this.getInstance(seq);
-        int numAccepted = 0;
         Object vPrime = value;			// proposer's default value
         int n_a = instance.highestProposal;				// highest n_a (to be calculated), see line 6 from pseudo code
         
         Request prepareRequest = generatePrepareRequest(seq, value, instance);
         int generatedProposalNum = prepareRequest.proposalNum;
-        
-        
+        int numAccepted = 0;
 
     	// Iterate through peers to send prepare message via RMI, including self (local call)
         for (int i=0; i < this.peers.length; ++i) {
@@ -290,9 +252,7 @@ public class Paxos implements PaxosRMI, Runnable{
         }
 
         Response proposalResponse = new Response();
-        proposalResponse.majorityAccepted = numAccepted >= this.peers.length/2 + 1;
         
-        // Alex's "jank" code
         if(numAccepted >= this.npaxos/2 + 1) {
         	proposalResponse.majorityAccepted = true;
         	proposalResponse.proposalNum = generatedProposalNum;			// used to send accept(n, v')
@@ -301,10 +261,11 @@ public class Paxos implements PaxosRMI, Runnable{
         }
         return proposalResponse;
     }
+    
 
     public Response Prepare(Request req){
     	
-        Response proposalResponse;
+        Response proposalResponse = new Response();
         Instance targetInstance = this.getInstance(req.seq);
 
         // Send the acceptance message if the received proposal number is greater than any this instance has seen
@@ -312,19 +273,14 @@ public class Paxos implements PaxosRMI, Runnable{
             targetInstance.highestProposal = req.proposalNum;
             // @TODO: this here or during accept?
             targetInstance.value = targetInstance.value == null ? req.val : targetInstance.value;
-            System.out.println("Paxos " + this.me + " seq " + req.seq + " " + targetInstance);
-
-            proposalResponse =  new Response(
-                    req.seq,
-                    targetInstance.highestProposal,
-                    targetInstance.value
-            );
+            proposalResponse.seq = req.seq;
+            proposalResponse.proposalNum = targetInstance.highestProposal;
+            proposalResponse.value = targetInstance.value;
             proposalResponse.proposalAccepted = true;
 
         // Send rejection message otherwise
         } else {
-            proposalResponse = new Response();
-            proposalResponse.proposalNum = targetInstance.highestProposal;  //@TODO: ??
+            proposalResponse.proposalNum = targetInstance.highestProposal;
             proposalResponse.value = targetInstance.value;
             System.out.println("Paxos " + this.me + " rejecting proposal of " + req);
         }
@@ -365,14 +321,15 @@ public class Paxos implements PaxosRMI, Runnable{
     		targetInstance.highestAccepted = req.proposalNum;
     		targetInstance.value = req.val;
     		acceptorResponse = new Response(
-    				req.proposalNum,
-    				targetInstance.highestAccepted,
-    				targetInstance.value
+//    				req.proposalNum,
+//    				targetInstance.highestAccepted,
+//    				targetInstance.value
     		);
     		acceptorResponse.acceptAccepted = true;
     	}
     	else {
     		acceptorResponse = new Response();
+    		acceptorResponse.acceptAccepted = false;
     		
     	}
     	return acceptorResponse;
@@ -384,13 +341,11 @@ public class Paxos implements PaxosRMI, Runnable{
         Instance instance = this.instances.get(decideRequest.seq);		// key should exist
         
         // needed for RMI call
-        int proposalNum = instance.highestProposal;
-        Object value = instance.value;
         instance.highestProposal = decideRequest.proposalNum;
         instance.highestAccepted = decideRequest.proposalNum;
         instance.value = decideRequest.val;
         instance.state = State.Decided;
-        this.dones[this.me] = decideRequest.done;  //@TODO: needed??
+        //this.dones[this.me] = decideRequest.done;  //@TODO: needed??
 
         for(int i = 0; i < this.npaxos; ++i) {
         	Response decideResponse;
@@ -400,8 +355,8 @@ public class Paxos implements PaxosRMI, Runnable{
         		        "Decide",
                         new Request(
                                 decideRequest.seq,
-                                proposalNum,
-                                value,
+                                decideRequest.proposalNum,
+                                decideRequest.val,
                                 done,
                                 this.me
                         ),
@@ -420,12 +375,11 @@ public class Paxos implements PaxosRMI, Runnable{
         instance.state = State.Decided;
         System.out.println("Paxos " + this.me + " decided " + this.getInstance(req.seq) + "\n    seq: " + req.seq);
 
-        Done(req.seq);
+        //Done(req.seq);
         
         this.dones[req.me] = req.done;
-        Response decideResponse = new Response();
         
-    	return decideResponse;
+    	return new Response();
     }
 
     /**
@@ -488,7 +442,7 @@ public class Paxos implements PaxosRMI, Runnable{
     	int min = this.dones[this.me];
     	
     	// search through all peer values to find the min seq from the dones array
-    	for(int i : dones){
+    	for(int i : this.dones){
     		if(min > i)
     			min = i;
     	}
@@ -497,6 +451,9 @@ public class Paxos implements PaxosRMI, Runnable{
     		if(seq < min || instances.get(seq).state == State.Decided) {
                 //instances.remove(seq);
             }
+    		if(seq > min) continue;
+    		if(instances.get(seq).state != State.Decided) continue;
+    		instances.remove(seq);
     	}
     	//just following the instructions above lol
     	return min + 1;
