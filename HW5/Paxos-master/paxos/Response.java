@@ -19,7 +19,7 @@ public class Response implements Serializable {
 
     // Your constructor and methods here
     public Response() {
-    	this.seq = -1;
+    	this.seq = -2;
     	this.proposalNum = Integer.MIN_VALUE;
     	this.value = null;
     	this.proposalAccepted = false;
