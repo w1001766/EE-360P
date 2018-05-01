@@ -281,7 +281,7 @@ public class Paxos implements PaxosRMI, Runnable{
         } else {
             proposalResponse.proposalNum = targetInstance.highestProposal;
             proposalResponse.value = targetInstance.value;
-            System.out.println("Paxos " + this.me + " rejecting proposal of " + req);
+            // System.out.println("Paxos " + this.me + " rejecting proposal of " + req);
         }
 
     	return proposalResponse;
@@ -366,13 +366,13 @@ public class Paxos implements PaxosRMI, Runnable{
     }
 
     public Response Decide(Request req){
-        System.out.println("Decide for Paxos " + this.me + " with " + req);
+        // System.out.println("Decide for Paxos " + this.me + " with " + req);
         Instance instance = this.getInstance(req.seq);
         instance.highestProposal = req.proposalNum;
         instance.highestAccepted = req.proposalNum;
         instance.value = req.val;
         instance.state = State.Decided;
-        System.out.println("Paxos " + this.me + " decided " + this.getInstance(req.seq) + "\n    seq: " + req.seq);
+        // System.out.println("Paxos " + this.me + " decided " + this.getInstance(req.seq) + "\n    seq: " + req.seq);
 
         //Done(req.seq);
         
@@ -474,19 +474,19 @@ public class Paxos implements PaxosRMI, Runnable{
     public retStatus Status(int seq){
         // Any sequence less than the Min value should've been removed and forgotten to save memory (from above)
     	if(seq < this.Min()) {
-    	    System.out.println("Seq " + seq + " has been forgotten with min: " + this.Min());
+    	    // System.out.println("Seq " + seq + " has been forgotten with min: " + this.Min());
             return new retStatus(State.Forgotten, null);
         }
     	
     	// Check if the sequence exists in the instances map
     	if(this.instances.containsKey(seq)) {
     		Instance targetInstance = instances.get(seq);
-    		System.out.println("Paxos " + this.me + " status of seq " + seq + " " + targetInstance);
+    		// System.out.println("Paxos " + this.me + " status of seq " + seq + " " + targetInstance);
     		return new retStatus(targetInstance.state, targetInstance.value);
     	}
     	else {
     		// sequence number doesn't exist yet, so state is pending.
-            System.out.println("Seq " + seq + " does not exist yet");
+            // System.out.println("Seq " + seq + " does not exist yet");
     		return new retStatus(State.Pending, null);
     	}
     }
