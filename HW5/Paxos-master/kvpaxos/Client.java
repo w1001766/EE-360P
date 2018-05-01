@@ -9,7 +9,7 @@ public class Client {
     int[] ports;
 
     // Your data here
-
+    
 
     public Client(String[] servers, int[] ports){
         this.servers = servers;
@@ -50,14 +50,23 @@ public class Client {
 
     // RMI handlers
     public Integer Get(String key){
-        // Your code here
-        return 0;
-
+        Request getRequest = new Request(key, null, 0);
+        Response getResponse = null;
+        
+        for(int i = 0; getResponse == null; i = (i+1)%servers.length) {
+        	getResponse = Call("Get", getRequest, i);
+        }
+        return getResponse.value;
     }
 
     public boolean Put(String key, Integer value){
-        // Your code here
-        return false;
+        Request putRequest = new Request(key, value, 0);
+        Response putResponse = null;
+        
+        for(int i = 0; putResponse == null; i = (i+1)%servers.length) {
+        	putResponse = Call("Put", putRequest, i);
+        }
+        return true;
     }
 
 }
